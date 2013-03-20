@@ -1,0 +1,101 @@
+ 1. Definição
+
+ 	Birds é um framework em PHP para guiá-lo para a nuvem
+ 	/Birds is a PHP framework to lead you to the cloud/
+
+ 	Birds traz os recursos necessários para rapidamente construir novas
+ 	aplicações em um abiente de Cloud computing. Como framework, possui
+ 	uma levíssima pegada (menos de 5MB de memória por processo), um
+ 	gerenciador de conteúdo (CMS) integrado, e a possibilidade de aliar
+ 	outros frameworks e linguagens de programação no mesmo ambiente.
+
+ 	Birds implementa o modelo MVC, onde os modelos (Model) podem ser 
+ 	implementados em bases de dados relacionais (MySQL, MS SQL, PgSQL),
+ 	NoSQL (NuoDB, CouchDB, MongoDB) ou usar o sistema de arquivos. 
+ 	Também é possível integrar diferentes bancos de dados na mesma 
+ 	aplicação.
+
+ 	Os templates (View) do Birds, implementados de forma orientada a 
+ 	objetos (OO), dispões de recursos para controlar detalhadamente a 
+ 	saída e diálogo com proxys externos. Inclusive podem atualizar e 
+ 	sincronizar repositórios externos para servir arquivos estáticos.
+
+ 	A controladora é também um CMS integrado ao Git para publicação e
+ 	sincronização distribuída. O conteúdo pode ser simultaneamente 
+ 	atualizado por editores de texto e online em diferentes localidades.
+ 	É possível atualizar e sincronizar conteúdo e aplicações do seu 
+ 	computador local. O framework também pode ser usado nativamente como
+ 	servidor Web em ambientes de desenvolvimento.
+
+ 	Pela sua natureza, o Birds pode ser rapidamente implementado em 
+ 	qualquer ambiente com suporte a PHP (5.3+, 5.4+ para a funcionalidade
+ 	de servidor Web).
+
+
+ 2. Planejamento versão 1.0
+
+ 	* Definir nome do release: nome composto (nome + adjetivo) proveniente
+ 	  da fauna de aves brasileira iniciada por A
+
+ 	* Integrar diferentes esquemas de templates disponíveis (Twitter 
+ 	  Bootstrap, Modernizr, Boilerplate, Fluidbaselinegrid etc.)
+
+ 	* Testar e implementar o Model com bases de dados não SQL.
+
+ 	* Desenvolver CMS com base no sistema de arquivos
+
+ 	* Integrar documentação do Birds ao CMS (qualquer um poderia
+ 	  contribuir com a documentação?)
+
+ 	* Verificar a possibilidade de integrar customização do Stackoverflow
+ 	  ao suporte/FAQ da framework.
+
+ 	* Pre-release utilizando repositório privado no Bitbucket. Release 
+ 	  em repositório público no Github.
+
+ 	* Diminuir pegada do framework: será que é possível rodar com menos 
+ 	  de 1MB?
+
+ 	* Planejar Views em classes orientadas a objeto: evitar 
+ 	  require/include e eval no PHP (possibilidade de rodar dentro de
+ 	  uma JVM; facilitas a otimização de código/opcode; possibilitar 
+ 	  voltar atrás e modificar um conteúdo já processado).
+
+ 	* Em uma rota, vários componentes podem ser carregados: como 
+ 	  integrá-los na View?
+
+ 	* Permitir conteúdo estático nas Views: fazer como no e-studio, para
+ 	  colocar conteúdo em todo o site.
+
+ 	* Fazer com que o framework atualize CDNs ao servir arquivos estáticos
+
+ 3. Ambientes a serem testados/homologados (PaaS)
+
+ 	Possibilitar o teste em qualquer ambiente PaaS (Platform as a Service) que
+ 	oferecer um plano de hosting gratuito.
+
+ 	Comparações e mais informações:
+
+ 	* http://blog.fortrabbit.com/comparing-cloud-hosting-platforms/
+
+ 	* http://core.cloudfoundry.org/listings
+
+ 	* http://www.paaslist.com/
+
+ 	Soluções a testar/homologar:
+
+    * PagodaBox (eles amam frameworks open source + Git) https://pagodabox.com
+
+    * AWS Elastic Beanstalk: http://aws.amazon.com/pt/elasticbeanstalk/
+
+    * Zend Server
+
+    * PHP Development Server (php -s 0.0.0.0:80 .php)
+
+    * Appfog https://www.appfog.com https://console.appfog.com/apps/birds?created=1
+
+    * Orchestra https://my.orchestra.io/apps
+
+    * https://www.dotcloud.com/
+
+    * http://app.jelastic.websolute.net.br/
