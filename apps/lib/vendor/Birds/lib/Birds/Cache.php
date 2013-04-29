@@ -34,7 +34,6 @@ class Cache
     public static $serialize=true;
     public static $memcachedServers=array('localhost:11211');
     private static $_cacheDir=null;
-    private static $_storages=array('file', 'apc', 'memcache', 'memcached');
     private static $_storage=null;
     private static $_memcache, $_memcached;
     /**
@@ -47,21 +46,22 @@ class Cache
 
     public static function lastModified($key, $expires=0, $method=null)
     {
-        bird::log(__METHOD__, func_get_args());
         $fn = 'lastModified'.ucfirst(self::storage($method));
-        if(is_array($key)) {
-            $ret = false;
+        if(is_array($key) && $key) {
             foreach($key as $ckey) {
                 $ret2 = self::$fn($ckey, $expires);
                 if ($ret2>$ret) {
                     $ret = $ret2;
                 }
+                unset($ckey, $ret2);
             }
-            return $ret;
+        } else {
+            $ret = self::$fn($ckey, $expires);
         }
-        return self::$fn($ckey, $expires);
+        unset($fn, $key, $expires, $method);
+        return $ret;
     }
-    public static function getLastModified($key, $expires=0, $method=null){return self::lastModified($key, $expires, $method);}
+
     public static function lastModifiedMemcached($key, $expires=0)
     {
         if(!self::memcached()) return self::lastModifiedMemcache($key, $expires);
@@ -114,17 +114,14 @@ class Cache
 
     public static function filename($key)
     {
-        bird::log(__METHOD__, func_get_args());
         return self::cacheDir().'/'.$key.'.cache';
     }
 
 
     public static function storage($method=null)
     {
-        bird::log(__METHOD__, func_get_args());
         if(!is_null($method)) {
-            if((is_numeric($method) || !is_string($method)) && isset(self::$_storages[$method])) return self::$_storages[$method];
-            else if(in_array($method, self::$_storages)) return $method;
+            if(in_array($method, array('file', 'apc', 'memcache', 'memcached'))) return $method;
         }
         if(is_null(self::$_storage)) {
             return self::defaultStorage();
@@ -134,7 +131,6 @@ class Cache
 
     public static function defaultStorage($method=null)
     {
-        self::$_storage=false;
         if(!is_null($method) && self::$_storage=self::storage($method)) {
             return self::$_storage;
         }
@@ -146,7 +142,6 @@ class Cache
         return self::$_storage;
     }
 
-
     public static function memcached()
     {
         if(is_null(self::$_memcached) && class_exists('Memcached')) {
@@ -156,13 +151,17 @@ class Cache
                 if(preg_match('/^(.*)\:([0-9]+)$/', $s, $m)) {
                     if(self::$_memcached->addServer($m[1], (int)$m[2])) $conn=true;
                 } else if(self::$_memcached->addServer($s, 11211)) $conn=true;
+                unset($s, $m);
             }
             if(!$conn) self::$_memcached=false;
             else {
                 if($key=self::siteKey()) {
                     self::$_memcached->setOption(\Memcached::OPT_PREFIX_KEY, $key.'/');
                 }
+                unset($key);
             }
+            unset($conn);
+
         }
         return self::$_memcached;
     } 
@@ -176,8 +175,10 @@ class Cache
                 if(preg_match('/^(.*)\:([0-9]+)$/', $s, $m)) {
                     if(self::$_memcache->connect($m[1], (int)$m[2])) $conn=true;
                 } else if(self::$_memcache->connect($s, 11211)) $conn=true;
+                unset($s, $m);
             }
             if(!$conn) self::$_memcache=false;
+            unset($conn);
         }
         return self::$_memcache;
     }
@@ -197,23 +198,25 @@ class Cache
      */
     public static function get($key, $expires=0, $method=null)
     {
-        bird::log(__METHOD__, func_get_args());
         $fn = 'get'.ucfirst(self::storage($method));
         if(is_array($key)) {
-            $ret = false;
             foreach($key as $ckey) {
                 $ret = self::$fn($ckey, $expires);
                 if ($ret) {
+                    unset($ckey);
                     break;
                 }
+                unset($ckey,$ret);
             }
-            return $ret;
+            if(!isset($ret)) $ret=false;
+        } else {
+            $ret = self::$fn($key, $expires);
         }
-        return self::$fn($key, $expires);
+        unset($fn, $key, $expires, $method);
+        return $ret; 
     }
     public static function getMemcached($key, $expires=0)
     {
-        bird::log(__METHOD__, func_get_args());
         if(!self::memcached()) return self::getMemcache($key, $expires);
         if ($expires) {
             $kexpires = self::$_memcached->get($key.'.expires');
@@ -225,54 +228,59 @@ class Cache
     }
     public static function getMemcache($key, $expires=0)
     {
-        bird::log(__METHOD__, func_get_args());
         if(!self::memcache()) return self::getApc($key, $expires);
 
         $siteKey = self::siteKey();
         if($siteKey) {
             $key = $siteKey.'/'.$key;
         }
+        unset($siteKey);
         if ($expires) {
             $kexpires = self::$_memcache->get($key.'.expires');
             if(!$kexpires || $kexpires < $expires) {
+                unset($kexpires);
                 return false;
             }
+            unset($kexpires);
         }
         return self::$_memcache->get($key);
     }
     public static function getApc($key, $expires=0)
     {
-        bird::log(__METHOD__, func_get_args());
         if(!function_exists('apc_store')) return self::getFile($key, $expires);
-
         $siteKey = self::siteKey();
         if($siteKey) {
             $key = $siteKey.'/'.$key;
         }
+        unset($siteKey);
         if ($expires) {
             $kexpires = apc_fetch($key.'.expires');
             if(!$kexpires || $kexpires < $expires) {
+                unset($kexpires, $key, $expires);
                 return false;
             }
+            unset($kexpires);
         }
+        unset($expires);
         return apc_fetch($key);
     }
+
     public static function getFile($key, $expires=0)
     {
-        bird::log(__METHOD__, func_get_args());
         $cfile = self::filename($key);
         if (file_exists($cfile) && (!$expires || filemtime($cfile) > $expires)) {
-            list($toexpire, $cvar) = explode("\n", file_get_contents($cfile), 2);
+            list($toexpire, $ret) = explode("\n", file_get_contents($cfile), 2);
             if($toexpire && $toexpire<BIRD_TIME) {
                 @unlink($cfile);
-                return false;
-            }
-            if (self::$serialize) {
-                $cvar = unserialize($cvar);
-            }
-            return $cvar;
-        }
-        return false;
+                $ret = false;
+            } else if (self::$serialize) {
+                $ret = unserialize($ret);
+            } else $ret=false;
+        } else $ret=false;
+
+        unset($cfile, $key, $expires);
+
+        return $ret;
     }
 
     /**
@@ -285,7 +293,6 @@ class Cache
      */
     public static function set($key, $value, $timeout=0, $method=null)
     {
-        bird::log(__METHOD__, func_get_args());
         $fn = 'set'.ucfirst(self::storage($method));
         if(is_array($key)) {
             $ret = false;
@@ -294,16 +301,18 @@ class Cache
                 if (!$ret) {
                     break;
                 }
+                unset($ckey);
             }
-            return $ret;
+        } else {
+            $ret = self::$fn($key, $value, $timeout);
         }
-        return self::$fn($key, $value, $timeout);
+        unset($fn,$key,$value,$timeout,$method);
+        return $ret;
     }
 
     public static function setMemcached($key, $value, $timeout=0)
     {
-        bird::log(__METHOD__, func_get_args());
-        if(!self::memcached()) return self::setMemcache($key, $expires);
+        if(!self::memcached()) return self::setMemcache($key, $value, $expires);
         if(!is_array($key)) {
             $key = array($key);
         }
@@ -321,34 +330,38 @@ class Cache
     }
     public static function setMemcache($key, $value, $timeout=0)
     {
-        bird::log(__METHOD__, func_get_args());
-        if(!self::memcache()) return self::setApc($key, $expires);
+        if(!self::memcache()) return self::setApc($key, $value, $expires);
 
         $siteKey = self::siteKey();
         if(!is_array($key)) {
-            $key = array($key);
-        }
+            $keys = array($key);
+        } else $keys=$key;
         if($siteKey) {
-            foreach($key as $kk=>$kv) {
-                $key[$kk] = $siteKey.'/'.$kv;
+            foreach($keys as $kk=>$kv) {
+                $keys[$kk] = $siteKey.'/'.$kv;
+                unset($kk,$kv);
             }
         }
-        $keys = $key;
-        $ttl = ($timeout)?($timeout - time()):($timeout);
-        if($ttl<0) {// a timestamp should be supplied, not the seconds to expire?
-            $ttl = $timeout;
-        }
+        unset($siteKey);
+        //$ttl = ($timeout)?($timeout - time()):($timeout);
+        //if($ttl<0) {// a timestamp should be supplied, not the seconds to expire?
+        //    $ttl = $timeout;
+        //}
+        $ret = true;
         foreach($keys as $key) {
             if(!self::$_memcache->set($key.'.expires', time(), 0, $timeout) || !self::$_memcache->set($key, $value, 0, $timeout)) {
-                return false;
+                $ret = false;
+                break;
             }
+            unset($key);
         }
-        return true;
+
+        unset($keys,$key,$value,$timeout);
+        return $ret;
     }
     public static function setApc($key, $value, $timeout=0)
     {
-        bird::log(__METHOD__, func_get_args());
-        if(!function_exists('apc_store')) return self::setFile($key, $expires);
+        if(!function_exists('apc_store')) return self::setFile($key, $value, $timeout);
 
         $siteKey = self::siteKey();
         if(!is_array($key)) {
@@ -372,19 +385,18 @@ class Cache
         return true;
     }
 
-    public function setFile($key, $value, $timeout=0)
+    public static function setFile($key, $value, $timeout=0)
     {
-        bird::log(__METHOD__, func_get_args());
-        $timeout = (int) $timeout;
         if(self::$serialize) {
             $value = serialize($value);
         }
-        return birds::save(self::filename($key), $timeout."\n".$value, true);
+        $ret = bird::save(self::filename($key), ((int) $timeout)."\n".$value, true);
+        unset($key,$value,$timeout);
+        return $ret;
     }
 
     public static function delete($key, $method=null)
     {
-        bird::log(__METHOD__, func_get_args());
         $fn = 'delete'.ucfirst(self::storage($method));
         if(is_array($key)) {
             $ret = false;
@@ -400,7 +412,6 @@ class Cache
     }
     public static function deleteMemcached($key)
     {
-        bird::log(__METHOD__, func_get_args());
         if(!self::memcached()) return self::deleteMemcache($key, $expires);
         if(self::$_memcached->deleteMulti($key.'.expires', $key)) {
             return true;
@@ -410,7 +421,6 @@ class Cache
     }
     public static function deleteMemcache($key)
     {
-        bird::log(__METHOD__, func_get_args());
         if(!self::memcache()) return self::deleteApc($key, $expires);
 
         $siteKey = self::siteKey();
@@ -425,7 +435,6 @@ class Cache
     }
     public static function deleteApc($key)
     {
-        bird::log(__METHOD__, func_get_args());
         if(!function_exists('apc_store')) return self::deleteFile($key, $expires);
 
         $siteKey = self::siteKey();
@@ -440,9 +449,9 @@ class Cache
     }
     public static function deleteFile($key)
     {
-        bird::log(__METHOD__, func_get_args());
         $cfile = self::filename($key);
         @unlink($cfile);
+        unset($cfile, $key);
         return true;
     }
 
@@ -451,24 +460,24 @@ class Cache
      */
     public static function siteKey($s=null)
     {
-        bird::log(__METHOD__, func_get_args());
         if (!is_null($s)) {
             self::$_siteKey = $s;
         } else if (is_null(self::$_siteKey)) {
             self::$_siteKey = false;
         }
+        unset($s);
         return self::$_siteKey;
         
     }
     
     public static function cacheDir($s=null)
     {
-        bird::log(__METHOD__, func_get_args());
         if (!is_null($s)) {
             self::$_cacheDir = $s;
         } else if (is_null(self::$_cacheDir)) {
-            self::$_cacheDir = BIRD_APP_ROOT.'/cache/Birds';
+            self::$_cacheDir = BIRD_VAR.'/cache';
         }
+        unset($s);
         return self::$_cacheDir;
     }
 

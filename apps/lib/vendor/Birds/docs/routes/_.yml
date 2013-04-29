@@ -1,0 +1,9 @@
+---
+options:
+  multiviews: true
+formats: [ text/css, text/plain, application/javascript, image/png, image/jpg, image/gif ]
+layout: assets
+content:
+  body:
+    -
+      class: Birds\App\Assets

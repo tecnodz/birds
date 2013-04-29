@@ -1,0 +1,3 @@
+[submodule "apps/lib/vendor/Birds/lib/Spyc"]
+	path = apps/lib/vendor/Birds/lib/Spyc
+	url = https://github.com/mustangostang/spyc.git

@@ -1,0 +1,21 @@
+---
+layout: ~              # the route's default layout configuration
+credentials: ~         # route credentials. If fails, it should return a 403 response.
+formats: [text/html]   # list of available formats for displaying this route. 
+meta:                  # metadata to be added to the layout. Some examples:
+  title: ~             # page title
+  @language: pt-BR     # <meta name="language" content="pt-BR" />
+  script: ~            # javascript files to be loaded. The layout may put those at the end of the file.
+  stylesheet: ~
+  @viewport: ~
+content:               # content to be added to the layout
+  $slotname:           # contents should be grouped by $slotname. Available slots are defined at the Layout.
+    -
+      $className:      # $className where this object is defined
+        uuid: $id      # primary key from $className to search for. If not defined, $method will be called statically.
+        method: render # method to use for rendering
+        credentials: ~ # content credentials. If fails, the contents is not shown.
+    -
+      $className: $id  # alternative syntax, using the default values for method and credentials.
+    -
+      $id              # alternative syntax for html content at BIRD_VAR/content/$id
