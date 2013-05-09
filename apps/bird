@@ -2,4 +2,4 @@
 <?php
 require_once "lib/vendor/Birds/bird.php";
 $app = Birds\bird::app('birds', 'dev');
-$app->fly();
+$app->fly('text/plain');

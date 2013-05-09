@@ -35,7 +35,8 @@ class Route
         $layout,
         $formats,
         $credentials,
-        $multiviews;
+        $multiviews,
+        $shell;
 
 
     /**
@@ -109,7 +110,7 @@ class Route
         if(is_null($format) && !is_null($this->format)) $format=$this->format;
         $r = $this->layout->render($format);
         if(is_string($r)) echo $r;
-    }    
+    }
 
     public function setFormat($format)
     {
@@ -150,6 +151,7 @@ class Route
         $cn = get_called_class();
 
         // transform any non-slug characters (except /_.) into lower-case ascii
+        if(substr($route,0,1)!='/') $route = '/'.$route;
 		$route = \Birds\bird::slug(urldecode($route), '/_.');
         if($updateScriptName) \Birds\bird::scriptName($route, false, true);
         if($route=='') $route='/';
@@ -157,6 +159,7 @@ class Route
 
         // is this necessary?
         $pi = pathinfo($route);
+        if(substr($pi['dirname'],0,1)=='.') $pi['dirname'] = substr($pi['dirname'],1);
         $dir = $pi['dirname'].(($pi['filename'])?('/'.$pi['filename']):(''));
         $ext = (isset($pi['extension']))?(self::mimeType($pi['extension'])):('');
         unset($pi);
@@ -199,8 +202,11 @@ class Route
 	{
         try {
             $r = \Birds\Yaml::read($f, 3600, array('language'=>\Birds\bird::$lang));
-            if($r && $ext && isset($r['formats']) && !in_array($ext, $r['formats'])) $r=false;
-            if($r && $multiviews && (!isset($r['options']['multiviews']) || $r['options']['multiviews']==false)) $r=false;
+            if($r) {
+                if($ext && isset($r['formats']) && !in_array($ext, $r['formats'])) $r=false;
+                else if($multiviews && (!isset($r['options']['multiviews']) || $r['options']['multiviews']==false)) $r=false;
+                else if(BIRD_CLI && (!isset($r['options']['shell']) || $r['options']['shell']==false)) $r=false;
+            }
             if($r) {
                 if(!is_object($r)) $r = new Route($r, $f);
                 if($ext && !$r->setFormat($ext)) {

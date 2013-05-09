@@ -2,6 +2,7 @@
 layout: ~              # the route's default layout configuration
 credentials: ~         # route credentials. If fails, it should return a 403 response.
 formats: [text/html]   # list of available formats for displaying this route. 
+multiview: ~           # If this route should enable multiviews
 meta:                  # metadata to be added to the layout. Some examples:
   title: ~             # page title
   @language: pt-BR     # <meta name="language" content="pt-BR" />

@@ -34,6 +34,7 @@ class Assets
 {
     public static
         $assetsUrl,
+        $assetsDir,
         $paths=array(
             'cat'=>'/bin/cat',
             'java'=>'/usr/bin/java',
@@ -66,16 +67,119 @@ class Assets
         }
     }
 
+    public static function file($url, $root=null, $abs=true)
+    {
+        if($abs && file_exists($url)) {
+            $bd = dirname(BIRD_ROOT);
+            if(substr($url,0,strlen($bd))==$bd) {
+                return $url;
+            }
+            $abs=false;
+        }
+        if(!$root) {
+            if(is_null(self::$assetsDir)) self::$assetsDir = \Birds\bird::app()->Birds['assets-dir'];
+            $root = self::$assetsDir;
+            if(!$root) $root = BIRD_VAR;
+        }
+        if(is_array($root)) {
+            foreach($root as $d) {
+                if($d) {
+                    $f=self::file($url, $d, $abs);
+                    if($f) return $f;
+                }
+                unset($d);
+            }
+            return false;
+        }
+        if(is_null(self::$assetsUrl)) self::$assetsUrl = \Birds\bird::app()->Birds['assets-url'];
+        $aul=strlen(self::$assetsUrl);
+
+        if(substr($url, 0, $aul)==self::$assetsUrl) {
+            if(file_exists($f=$root.substr($url,$aul))) {
+                return $f;
+            }
+        }
+        return false;
+    }
+
     /**
      * Compress Javascript & CSS
      */
-    public static function minify($s, $root=false, $compress=true, $before=true, $raw=false)
+    public static function minify($s, $root=null, $compress=true, $before=true, $raw=false)
     {
-        if(!$root) {
-            $root = \Birds\bird::app()->Birds['document-root'];
-            if(!$root) $root = BIRD_VAR;
-        }
+        if(is_null(self::$assetsUrl)) self::$assetsUrl = \Birds\bird::app()->Birds['assets-url'];
         // search for static files to compress
+        if(!is_array($s)) $s = array($s);
+        if($compress && !file_exists(self::$paths['java'])) {
+            $compress = false;
+        }
+        $r='';$css=array();$js=array();$jsn='';$cssn='';
+        foreach($s as $f) {
+            if(strpos($f, '<')!==false) {
+                if(($raw || $compress) && preg_match_all('#<script [^>]*src="([^"\?\:]+)"[^>]*>\s*</script>|<link [^>]*type="text/css"[^>]*href="([^"\?\:]+)"[^>]*>#i', $f, $m)) {
+                    $fr=array();
+                    foreach($m[0] as $i=>$p) {
+                        if($m[1][$i] && ($fn=self::file($m[1][$i]))) {
+                            $js[$fn] = filemtime($fn);
+                            $fr[]=$p;
+                            $jsn.=':'.$m[1][$i];
+                        } else if($m[2][$i] && ($fn=self::file($m[2][$i]))) {
+                            $css[$fn] = filemtime($fn);
+                            $fr[]=$p;
+                            $cssn.=':'.$m[2][$i];
+                        }
+                        unset($i, $p, $fn);
+                    }
+                    if(isset($fr[0])) {
+                        $r .= str_replace($fr, '', $f);
+                        unset($fr, $f);
+                        continue;
+                    }
+                    unset($fr);
+                }
+                $r .= $f;
+            } else if(preg_match('/\.(css|less)(\?.*)?$/i', $f, $m)) {
+                if($m[2]=='' && ($raw || $compress) && ($fn=self::file($f))) {
+                    $css[$fn] = filemtime($fn);
+                    $cssn.=':'.$f;
+                } else {
+                    $r .= '<link rel="stylesheet" type="text/css" href="'.bird::xml($f).'" />';
+                }
+                unset($m, $fn);
+            } else if(preg_match('/\.js(\?.*)?$/i', $f, $m)) {
+                if($m[1]=='' && ($raw || $compress) && ($fn=self::file($f))) {
+                    $js[$fn] = filemtime($fn);
+                    $jsn.=':'.$f;
+                } else {
+                    $r .= '<script src="'.bird::xml($f).'"></script>';
+                }
+                unset($m);
+            }
+            unset($f);
+        }
+        if($raw || $compress) {
+            if($jsn) {
+                $f = md5(substr($jsn,1)).'.js';
+                $fn = self::file($f);
+                if(!$fn || filemtime($fn)<max($js)) { // generate
+
+                }
+                if($before) $r = '<script src="'.self::$assetsUrl.'/'.$f.'"></script>'.$r;
+                else $r .= '<script src="'.self::$assetsUrl.'/'.$f.'"></script>';
+            }
+            if($cssn) {
+                $f = md5(substr($cssn,1)).'.css';
+                $fn = self::file($f);
+                if(!$fn || filemtime($fn)<max($css)) { // generate
+
+                }
+                if($before) $r = '<link rel="stylesheet" type="text/css" href="'.self::$assetsUrl.'/'.$f.'" />'.$r;
+                else $r .= '<link rel="stylesheet" type="text/css" href="'.self::$assetsUrl.'/'.$f.'" />';
+            }
+        }
+        return $r;
+
+
         $types = array(
           'js'=>array('pat'=>'#<script [^>]*src="([^"\?\:]+)"[^>]*>\s*</script>#', 'tpl'=>'<script type="text/javascript" src="[[url]]"></script>'),
           'css'=>array('pat'=>'#<link [^>]*type="text/css"[^>]*href="([^"\?\:]+)"[^>]*>#', 'tpl'=>'<link rel="stylesheet" type="text/css" href="[[url]]" />'),
@@ -112,6 +216,7 @@ class Assets
                 unset($i, $url, $tpl);
             }
         }
+                \Birds\bird::debug($f, $s, false);
 
         if($compress && !file_exists(self::$paths['java'])) {
             $compress = false;
@@ -121,11 +226,21 @@ class Assets
             if($raw) {
                 $ext = '.'.$type;
                 foreach($f as $i=>$url){
-                    if(substr($url, -1 * strlen($ext))==$ext) {
-                        if(file_exists($url) && substr($url, 0, strlen($root))==$root) {
-                            $files[substr($url, strlen($root))]=filemtime($url);
-                        } else if(file_exists($root.$url)) {
-                            $files[$url]=filemtime($root.$url);
+                    if(true || substr($url, -1 * strlen($ext))==$ext) {
+                        if(substr($url, 0, $aul)==self::$assetsUrl) {
+                            foreach($root as $d) {
+                                if(file_exists($uf=$d.substr($url,$aul))) {
+                                    $files[$url]=filemtime($uf);
+                                }
+                                unset($uf, $d);
+                            }
+                        } else if(file_exists($url)) {
+                            foreach($root as $d) {
+                                if(substr($url,0,strlen($d))==$d) {
+                                    $files[self::$assetsUrl.substr($url, strlen($d))]=filemtime($url);
+                                }
+                                unset($d);
+                            }
                         }
                     }
                     unset($i, $url);

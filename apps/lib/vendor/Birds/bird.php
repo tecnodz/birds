@@ -38,7 +38,7 @@ class bird
         $thousandSeparator='.',
         $timeout,
         $vars=array();
-    protected static $_name='birds', $_env='dev', $_server, $app, $scriptName, $scriptRealName, $requestUri;
+    protected static $_name='birds', $_env='dev', $_server, $app, $scriptName, $scriptRealName, $urlParam, $requestUri;
 
 	/**
 	 * Catches current bird application and route
@@ -153,6 +153,19 @@ class bird
         return self::$scriptName;
     }
 
+    public static function urlParam($url=null)
+    {
+        if(is_null($url)) {
+            if(is_null(self::$scriptName)) return false;
+            $url = self::$scriptName;
+        }
+        if(self::$scriptRealName!=$url && substr(self::$scriptRealName, 0, strlen($url))==$url) {
+            return preg_split('#[/\\\\]+#', substr(self::$scriptRealName, strlen($url)), null, PREG_SPLIT_NO_EMPTY);
+        } else {
+            return false;
+        }
+    }
+
     /**
      * Debugging method
      *
@@ -175,7 +188,7 @@ class bird
             echo "\n";
             unset($k, $v);
         }
-        if(self::$debugEnv) echo '-- Time: '.self::number(microtime(true) - BIRD_TIME, 6).'s -- Mem: '.self::bytes(memory_get_usage()).' -- ';
+        if(self::$debugEnv) echo '-- Time: '.self::number(microtime(true) - BIRD_TIME, 6).'s -- Mem: '.self::bytes(memory_get_usage())." -- \n";
         exit();
     }
 

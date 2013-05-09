@@ -109,7 +109,7 @@ class App
         }
     }
     
-	public function fly()
+	public function fly($format=null)
 	{
         if(!isset($this->config['Birds']['routes-dir'])) {
             bird::log('Don\t know where to go -- please set Birds->routes-dir');
@@ -129,14 +129,14 @@ class App
             App\Route::setBase($this->config['Birds']['routes-dir']);
             $route = App\Route::find($req['script-name'], true);
             if($route) {
-                $route->render();
+                $route->render($format);
                 unset($route);
             } else {
-                $this->error(404);
+                $this->error(404, $format);
             }
         } catch(\Exception $e) {
             bird::log(__METHOD__.', '.__LINE__);
-            $this->error(500);
+            $this->error(500, $format);
         }
 	}
 
@@ -145,11 +145,11 @@ class App
 		return 'Bird Application: '.bird::name().'/'.bird::env();
 	}
 
-    public function error($no=500)
+    public function error($no=500, $format=null)
     {
         $err = App\Route::find('/error'.$no);
         if($err) {
-            $err->render();
+            $err->render($format);
             unset($err);
         } else {
             bird::debug(__METHOD__.': '.$no);
