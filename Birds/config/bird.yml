@@ -1,0 +1,11 @@
+---
+all:
+  Birds:
+    apps-dir: .
+    document-root: ../htdocs
+    languages: [ en, pt ]
+    language: pt
+    routes-dir:  "$BIRD_SITE_ROOT/data/web:$BIRD_APP_ROUTE/data/web:$BIRD_ROOT/data/web"
+    content-dir: "$BIRD_SITE_ROOT/data/content:$BIRD_APP_ROUTE/data/content:$BIRD_ROOT/data/content"
+    layout-dir:  "$BIRD_SITE_ROOT/data/layout:$BIRD_APP_ROUTE/data/layout:$BIRD_ROOT/data/layout"
+    assets-url: "/_"

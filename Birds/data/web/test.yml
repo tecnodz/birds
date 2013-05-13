@@ -1,0 +1,10 @@
+---
+options:
+  multiviews: true
+  shell: true
+formats: [ text/plain ]
+content:
+  body:
+    -
+      class: Birds\Test
+      method: test
