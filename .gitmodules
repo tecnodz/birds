@@ -1,3 +1,6 @@
 [submodule "apps/lib/vendor/Birds/lib/Spyc"]
 	path = apps/lib/vendor/Birds/lib/Spyc
 	url = https://github.com/mustangostang/spyc.git
+[submodule "Birds/lib/lessphp"]
+	path = Birds/lib/lessphp
+	url = git://github.com/leafo/lessphp.git
