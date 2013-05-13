@@ -1,2 +1,0 @@
-3600
-a:1:{s:3:"all";a:1:{s:5:"Birds";a:9:{s:8:"apps-dir";s:1:".";s:13:"document-root";s:9:"../htdocs";s:9:"languages";a:2:{i:0;s:2:"en";i:1;s:2:"pt";}s:8:"language";s:2:"pt";s:10:"routes-dir";s:39:"$BIRD_VAR/routes:$BIRD_ROOT/docs/routes";s:11:"content-dir";s:33:"$BIRD_VAR/content:$BIRD_ROOT/docs";s:10:"layout-dir";s:39:"$BIRD_VAR/layout:$BIRD_ROOT/docs/layout";s:10:"assets-dir";s:39:"../htdocs/_:$BIRD_ROOT/resources/assets";s:10:"assets-url";s:2:"/_";}}}
