@@ -179,7 +179,6 @@ class Assets
                                 }
                                 unset($cd);
                             }
-                            \Birds\bird::debug($fn);
                         }
                         $fs=array_keys(${$type});
                         if($type=='css') {

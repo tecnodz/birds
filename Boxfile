@@ -4,6 +4,7 @@ web1:
   name: arara
   shared_writable_dirs:
     - Birds/data
+    - Birds/log
   document_root: htdocs/.php
   php_short_open_tag: "0"
   php_date_timezone: "America/Sao_Paulo"

@@ -157,7 +157,7 @@ class App
             $err->render($format);
             unset($err);
         } else {
-            bird::debug(__METHOD__.': '.$no);
+            bird::debug(__METHOD__.': '.$no.' for '.bird::scriptName(true));
         }
     }
 

@@ -133,6 +133,7 @@ class bird
             if(!(self::$_server=Cache::getApc('hostname',0))){
                 self::$_server=exec('hostname -f');
                 if(!self::$_server) self::$_server = 'localhost.localdomain';
+                else if(!strpos(self::$_server, '.')) self::$_server .= '.localdomain';
                 Cache::setApc('hostname', self::$_server, 0);
             }
         }
