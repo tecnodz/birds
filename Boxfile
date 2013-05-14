@@ -1,11 +1,22 @@
 # Pagodabox sample Boxfile
 ---
 web1:
-  name: Birds
+  name: arara
   shared_writable_dirs:
     - Birds/data
   document_root: htdocs/.php
-  php_version: 5.3.8
+  php_short_open_tag: "0"
+  php_date_timezone: "America/Sao_Paulo"
+  php_max_execution_time: 10
+  php_max_input_time: 10
+  php_post_max_size: "4M"
+  php_memory_limit: "4M"
   php_extensions:
     - yaml
     - apc
+    - memcached
+    - gd
+    - upload_progress
+cache1:
+  name: ararajuba
+  type: memcached
