@@ -1,0 +1,11 @@
+# Pagodabox sample Boxfile
+---
+web1:
+  name: Birds
+  shared_writable_dirs:
+    - Birds/data
+  document_root: htdocs/.php
+  php_version: 5.3.8
+  php_extensions:
+    - yaml
+    - apc
