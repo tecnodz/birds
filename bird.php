@@ -76,8 +76,8 @@ class bird
         if(!is_null($name)) {
             self::$_name=preg_replace('/[^a-z0-9\-\_]/i', '', $name);
             unset($name);
-        } else if(is_null(self::$_name) && !(self::$_name = self::site())) {
-            self::$_name = 'birds';
+        } else if(is_null(self::$_name) && (!(self::$_name = self::site()) || self::$_name=='' )) {
+            self::$_name = 'bird';
         }
         Cache::siteKey(self::$_name);
         return self::$_name;
