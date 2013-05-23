@@ -1,6 +1,6 @@
-[submodule "Birds/lib/lessphp"]
-	path = Birds/lib/lessphp
+[submodule "lib/lessphp"]
+	path = lib/lessphp
 	url = git://github.com/leafo/lessphp.git
-[submodule "Birds/lib/Spyc"]
-	path = Birds/lib/Spyc
+[submodule "lib/Spyc"]
+	path = lib/Spyc
 	url = git://github.com/mustangostang/spyc.git

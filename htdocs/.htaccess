@@ -1,5 +1,0 @@
-Allow from All
-RewriteEngine On
-RewriteBase /
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.*)$ .php [QSA,L]
