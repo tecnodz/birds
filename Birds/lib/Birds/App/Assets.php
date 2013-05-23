@@ -142,7 +142,7 @@ class Assets
                     $css[$fn] = filemtime($fn);
                     $cssn.=':'.$f;
                 } else {
-                    $r .= '<link rel="stylesheet" type="text/css" href="'.bird::xml($f).'" />';
+                    $r .= '<link rel="stylesheet" type="text/css" href="'.\Birds\bird::xml($f).'" />';
                 }
                 unset($m, $fn);
             } else if(preg_match('/\.js(\?.*)?$/i', $f, $m)) {

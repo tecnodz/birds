@@ -247,20 +247,22 @@ class Layout
             $ld = \Birds\bird::app()->Birds['layout-dir'];
             if(is_array($ld)) {
                 foreach($ld as $dir) {
-                    if(file_exists($l=$dir.'/'.$l)) {
+                    if(file_exists($f=$dir.'/'.$l)) {
                         unset($dir);
                         break;
                     }
-                    unset($dir, $l);
+                    unset($dir, $f);
                 }
-            } else if(file_exists($l=$ld.'/'.$l)) {
+            } else if(file_exists($f=$ld.'/'.$l)) {
             } else {
-                unset($l);
+                unset($f);
             }
-            if(!isset($l)) {
+            if(!isset($f)) {
                 return new Layout();
             }
             unset($ld);
+            $l = $f;
+            unset($f);
         }
         if(substr($l, -4)=='.yml') {
             return \Birds\Yaml::read($l, 3600, null, '\\Birds\\App\\Layout');
