@@ -37,7 +37,8 @@ class bird
         $decimalSeparator=',',
         $thousandSeparator='.',
         $timeout,
-        $vars=array();
+        $vars=array(),
+        $session=null;
     protected static $_name, $_env='prod', $_site, $_server, $app, $scriptName, $scriptRealName, $urlParam, $requestUri;
 
 	/**
@@ -199,6 +200,84 @@ class bird
         }
     }
 
+
+
+    public static function session()
+    {
+        if(is_null(self::$session)) {
+            foreach(self::cookies($n=Session::name()) as $c) {// get cookie id from config
+                if($u=\Birds\Cache::get('session/'.$c)) {
+                    break;
+                }
+                unset($u, $c);
+            }
+            if(!isset($u)) {
+                $c = uniqid();
+                $u = new \Birds\Session();
+            }
+            self::$session = $u;
+            Session::$id = $c;
+            setcookie($n, $c, (Session::$expires>2592000)?(Session::$expires):(time()+Session::$expires), '/', null, false, true);
+            unset($u, $c, $n);
+        }
+        return self::$session;
+    }
+
+
+    /**
+     * Replacement for $_COOKIE, since it's possible to issue more than one 
+     * cookie value per name.
+     */
+    public static function cookies($cn)
+    {
+        $c=array();
+        if (isset($_SERVER['HTTP_COOKIE'])) {
+            $rawcookies=preg_split('/\;\s*/', $_SERVER['HTTP_COOKIE'], null, PREG_SPLIT_NO_EMPTY);
+            foreach ($rawcookies as $cookie) {
+                if (strpos($cookie, '=')===false) {
+                    unset($cookie);
+                    continue;
+                }
+                list($cname, $cvalue)=explode('=', $cookie, 2);
+                if(trim($cname)==$cn) {
+                    $c[]=$cvalue;
+                }
+                unset($cookie, $cname, $cvalue);
+            }
+            unset($rawcookies);
+        }
+        return $c;
+    }
+
+    public static function redirect($url='')
+    {
+        $url = ($url == '') ? (self::scriptName()) : ($url);
+        @header('HTTP/1.1 301 Moved Permanently', true);
+        if (preg_match('/\:\/\//', $url)) {
+            @header("Location: $url", true, 301);
+            $str = "<html><head><meta http-equiv=\"Refresh\" content=\"0;".
+                   "URL={$url}\"></head><body><body></html>";
+        } else {
+            $scheme = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']=='on')||(isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO']=='https')) ? ('https') : ('http');
+            @header("Location: {$scheme}://{$_SERVER['HTTP_HOST']}{$url}", true, 301);
+            $str = "<html><head><meta http-equiv=\"Refresh\" content=\"0;".
+                   "URL={$scheme}://{$_SERVER['HTTP_HOST']}{$url}\">".
+                   "</head><body><body></html>";
+            unset($scheme);
+        }
+        @header(
+            'Cache-Control: no-store, no-cache, must-revalidate,'.
+            'post-check=0, pre-check=0'
+        );
+        @header('Content-Length: '.strlen($str));
+        echo $str;
+        unset($str);
+        flush();
+        ob_end_flush();
+
+        self::end();
+    }
+
     /**
      * Debugging method
      *
@@ -222,6 +301,14 @@ class bird
             unset($k, $v);
         }
         if(self::$debugEnv) echo '-- Time: '.self::number(microtime(true) - BIRD_TIME, 6).'s -- Mem: '.self::bytes(memory_get_usage())." -- \n";
+        self::end();
+    }
+
+    public static function end()
+    {
+        if(!is_null(self::$app)) {
+            App::end();
+        }
         exit();
     }
 

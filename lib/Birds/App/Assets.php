@@ -252,8 +252,11 @@ class Assets
             ob_end_clean();
         }
         if(!file_exists($file)) {
-            if($exit) exit();
-            else return false;
+            if($exit) {
+                \Birds\bird::end();
+            } else {
+                return false;
+            }
         }
         $expires = 3600 * 10;
         if (isset($_GET['t']))
@@ -263,7 +266,7 @@ class Assets
             @header('Content-Type: ' . $format);
         else {
             //$format = \Birds\bird::fileFormat($file);
-            $format = Route::mime($extension);
+            $format = Route::mimeType($extension);
             if ($format)
                 @header('Content-Type: ' . $format);
         }
@@ -363,7 +366,7 @@ class Assets
 
         fclose($fp);
         if($exit) {
-            exit;
+            \Birds\bird::end();
         }
     }
 }

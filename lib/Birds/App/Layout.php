@@ -80,10 +80,33 @@ class Layout
         if((($m='render'.ucfirst(\Birds\bird::camelize($format))) && method_exists($this, $m)) || (($m='render'.ucfirst(substr($format, 0, strpos($format, '/')))) && method_exists($this, $m))) {
             return $this->$m($format);
         } else {
-            \Birds\bird::log(__METHOD__.': method '.$m.' does not exist!');
+            //\Birds\bird::log(__METHOD__.': method '.$m.' does not exist!');
+            return $this->renderAny($format);
         }
         return false;
     }
+
+    public function renderImage($format)
+    {
+        return $this->renderAny($format);
+    }
+
+    public function renderAny($format)
+    {
+        \Birds\App::header('Content-Type: '.$format);
+        // prepare contents
+        if(is_array($this->content)) {
+            foreach($this->content as $slot=>$cs) {
+                foreach($cs as $i=>$c) {
+                    $r = Content::find($c);
+                    if($r) \Birds\App::output($r->render($format));
+                    unset($r, $i, $c);
+                }
+                unset($slot, $cs);
+            }
+        }
+    }
+
 
     /**
      * HTML formatter

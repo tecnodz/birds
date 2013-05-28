@@ -143,6 +143,7 @@ class App
             bird::log(__METHOD__.', '.__LINE__);
             $this->error(500, $format);
         }
+        self::end();
 	}
 
 	public function __toString()
@@ -159,6 +160,16 @@ class App
         } else {
             bird::debug(__METHOD__.': '.$no.' for '.bird::scriptName(true));
         }
+    }
+
+    public static function end()
+    {
+        if(!is_null(bird::$session)) {
+            // store session
+            Cache::set('session/'.Session::$id, bird::$session, Session::$expires);
+            //bird::log('closing session: session/'.Session::$id.' '.Session::name(), var_export(bird::$session, true));
+        }
+        //bird::log('closing app');
     }
 
     /**
