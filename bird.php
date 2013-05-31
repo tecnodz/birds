@@ -200,7 +200,54 @@ class bird
         }
     }
 
-
+    public static function fullUrl($url=null, $parts=array())
+    {
+        if(is_null($url)) {
+            $url = parse_url(self::scriptName(true));
+        } else if (!is_array($url)) {
+            $url = parse_url($url);
+        }
+        if(!isset($_SERVER['SERVER_PORT'])) {
+            $_SERVER += array('SERVER_PORT'=>'80', 'HTTP_HOST'=>'localhost');
+        }
+        $url += $parts;
+        if(isset($url['scheme'])) {
+            $s = $url['scheme'].'://';
+        } else if((isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT']=='443')
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO']=='https'))  {
+            $s = 'https://';
+        } else {
+            $s = 'http://';
+        }
+        if (isset($url['user']) || isset($url['pass'])) {
+            $s .= urlencode($url['user']);
+            if (isset($url['pass'])) {
+                $s .= ':' . urlencode($url['pass']);
+            }
+            $s .='@';
+        }
+        if(isset($url['host'])) {
+            $s .= $url['host'];
+        } else if(isset($_SERVER['HTTP_HOST'])) {
+            $s .= $_SERVER['HTTP_HOST'];
+        } else {
+            $s .= self::serverName();
+        }
+        if (isset($url['port']) && $url['port']!='80') {
+            $s .= ':' . $url['port'];
+        }
+        if(isset($url['path'])) {
+            $s .= $url['path'];
+        }
+        if (isset($url['query'])) {
+            $s .= '?' . $url['query'];
+        }
+        if (isset($url['fragment'])) {
+            $s .= '#' . $url['fragment'];
+        }
+        unset($url);
+        return $s;
+    }
 
     public static function session()
     {
