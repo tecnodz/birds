@@ -146,7 +146,6 @@ class Route
      */
 	public static function find($route, $updateScriptName=false)
 	{
-
         if(is_null(self::$base)) return false;
         $cn = get_called_class();
 
@@ -206,6 +205,7 @@ class Route
                 if($ext && isset($r['formats']) && !in_array($ext, $r['formats'])) $r=false;
                 else if($multiviews && (!isset($r['options']['multiviews']) || $r['options']['multiviews']==false)) $r=false;
                 else if(BIRD_CLI && (!isset($r['options']['shell']) || $r['options']['shell']==false)) $r=false;
+                else if(!BIRD_CLI && ((isset($r['options']['http']) && $r['options']['http']==false) || (isset($r['options']['shell']) && $r['options']['shell']==true))) $r=false;
             }
             if($r) {
                 if(!is_object($r)) $r = new Route($r, $f);

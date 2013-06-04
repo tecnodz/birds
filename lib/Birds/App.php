@@ -38,6 +38,9 @@ class App
 	{
         $cfg=self::configFiles();
         array_unshift($cfg, bird::env());
+        if(!defined('BIRD_SITE_ROOT')) {
+            bird::site();
+        }
         $this->config = bird::recursiveReplace(
             array('$BIRD_ROOT', '$BIRD_APP_ROOT', '$BIRD_VAR', '$BIRD_VERSION', '$BIRD_SITE_ROOT'),
             array(  BIRD_ROOT,    BIRD_APP_ROOT,    BIRD_VAR,    BIRD_VERSION,    BIRD_SITE_ROOT),
@@ -62,6 +65,8 @@ class App
                     $v = (substr($v, 0, 1)!='/')?(realpath(BIRD_APP_ROOT.'/'.$v)):(realpath($v));
                 }
                 if($v) $this->config['Birds'][$k] = $v;
+            } else if(is_string($v) && substr($v, 0, 1)=='[' && substr($v, -1)==']') {
+                $this->config['Birds'][$k] = preg_split('#\s*,\s*#', trim(substr($v, 1, strlen($v)-2)), null, PREG_SPLIT_NO_EMPTY);
             }
             unset($k, $v);
         }
@@ -294,24 +299,23 @@ class App
     {
         $name = bird::name();
         list($server, $domain) = explode('.', bird::serverName(), 2);
-        $cfg=array();
-        if(defined('BIRD_SITE_ROOT') && BIRD_SITE_ROOT!=BIRD_APP_ROOT) {
-            if(file_exists($f=BIRD_SITE_ROOT.'/config/'.$name.'.yml')) {
-                $cfg[]=$f;
-            }
-            if(file_exists($f=BIRD_SITE_ROOT.'/config/'.$name.'@'.$server.'.yml')) {
-                $cfg[]=$f;
-            }
-        }
+        $cfg=array(BIRD_ROOT.'/config/bird.yml');
         if(BIRD_APP_ROOT!=BIRD_ROOT) {
-            if(file_exists($f=BIRD_APP_ROOT.'/config/'.$name.'.yml')) {
-                $cfg[]=$f;
-            }
             if(file_exists($f=BIRD_APP_ROOT.'/config/'.$name.'@'.$server.'.yml')) {
                 $cfg[]=$f;
             }
+            if(file_exists($f=BIRD_APP_ROOT.'/config/'.$name.'.yml')) {
+                $cfg[]=$f;
+            }
         }
-        $cfg[]=BIRD_ROOT.'/config/bird.yml';
+        if(defined('BIRD_SITE_ROOT') && BIRD_SITE_ROOT!=BIRD_APP_ROOT) {
+            if(file_exists($f=BIRD_SITE_ROOT.'/config/'.$name.'@'.$server.'.yml')) {
+                $cfg[]=$f;
+            }
+            if(file_exists($f=BIRD_SITE_ROOT.'/config/'.$name.'.yml')) {
+                $cfg[]=$f;
+            }
+        }
         unset($f, $server, $domain, $name);
         return $cfg;
     }

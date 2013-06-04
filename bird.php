@@ -527,7 +527,9 @@ class bird
                 } else if(is_array($res[$k]) && is_array($v)) {
                     $res[$k] = bird::mergeRecursive($v, $res[$k]);
                 }
+                unset($k, $v);
             }
+            unset($args);
         }
         return $res;
     }
