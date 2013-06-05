@@ -54,6 +54,9 @@ class App
                     $v=array();
                     foreach($pv as $vk=>$vv) {
                         $vv = (substr($vv, 0, 1)!='/')?(realpath(BIRD_APP_ROOT.'/'.$vv)):(realpath($vv));
+                        if(BIRD_OS=='windows'){
+                            $vv = str_replace('\\', '/', $vv);
+                        }
                         if($vv && !in_array($vv, $v)) {
                             $v[]=$vv;
                         }
@@ -63,6 +66,9 @@ class App
                     else $v=array_values($v);
                 } else {
                     $v = (substr($v, 0, 1)!='/')?(realpath(BIRD_APP_ROOT.'/'.$v)):(realpath($v));
+                    if(BIRD_OS=='windows'){
+                        $v = str_replace('\\', '/', $v);
+                    }
                 }
                 if($v) $this->config['Birds'][$k] = $v;
             } else if(is_string($v) && substr($v, 0, 1)=='[' && substr($v, -1)==']') {

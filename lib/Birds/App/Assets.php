@@ -54,7 +54,16 @@ class Assets
         foreach($cd as $d) {
             // todo: search for urlparameters in file name, like used for optimizing images
             if(file_exists($f=$d.$url)) {
-                break;
+                if(is_dir($f)) {
+                    if(file_exists($f=$f.'/index.'.Route::mimeType($format))) {
+                        break;
+                    }
+                } else {
+                    if($p=strrpos($url, '.')) {
+                        $format = Route::mimeType(substr($url, $p+1));
+                    }
+                    break;
+                }
             }
             unset($d, $f);
         }
@@ -279,7 +288,7 @@ class Assets
             header('Cache-Control: no-cache, no-store, max-age=0, must-revalidate');
             header('Expires: Thu, 11 Oct 2007 05:00:00 GMT'); // Date in the past
         } else {
-            //self::getBrowserCache(md5_file($file) . (($gzip) ? (';gzip') : ('')), $lastmod, $expires);
+            \Birds\bird::getBrowserCache(md5_file($file) . (($gzip) ? (';gzip') : ('')), $lastmod, $expires);
         }
         @header('Content-Transfer-Encoding: binary');
 
@@ -369,6 +378,7 @@ class Assets
             \Birds\bird::end();
         }
     }
+
 }
 
 

@@ -237,6 +237,7 @@ class Route
             'txt'   => 'text/plain',
             'html'  => 'text/html',
             'htm'   => 'text/html',
+            'xml'   => 'text/xml',
             'php'   => 'text/html',
             'png'   => 'image/png',
             'gif'   => 'image/gif',

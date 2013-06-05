@@ -117,7 +117,7 @@ class bird
                 self::$_site = '';
             }
             if (!defined('BIRD_SITE_ROOT')) {
-                define('BIRD_SITE_ROOT', (is_dir(BIRD_APP_ROOT.'/sites/'.self::$_site))?(BIRD_APP_ROOT.'/sites/'.self::$_site):(BIRD_APP_ROOT));
+                define('BIRD_SITE_ROOT', (is_dir(BIRD_APP_ROOT.'/apps/'.self::$_site))?(BIRD_APP_ROOT.'/apps/'.self::$_site):(BIRD_APP_ROOT));
             }
             unset($host, $site, $p);
         }
@@ -270,6 +270,53 @@ class bird
         return self::$session;
     }
 
+    public static function getBrowserCache($etag, $lastModified, $expires=false)
+    {
+        @header(
+            'Last-Modified: '.
+            gmdate("D, d M Y H:i:s", $lastModified) . ' GMT'
+        );
+        $cacheControl = \Birds\bird::cacheControl(null, $expires);
+        if ($expires && $cacheControl=='public') {
+            @header('Expires: '. gmdate("D, d M Y H:i:s", time() + $expires) . ' GMT');
+        }
+        @header('ETag: "'.$etag.'"');
+
+        $if_none_match = (isset($_SERVER['HTTP_IF_NONE_MATCH']))?(stripslashes($_SERVER['HTTP_IF_NONE_MATCH'])):(false);
+        $if_modified_since = (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']))?(strtotime(stripslashes($_SERVER['HTTP_IF_MODIFIED_SINCE']))):(false);
+        if (!$if_modified_since && !$if_none_match) {
+            return;
+        } else if ($if_none_match && $if_none_match != $etag && $if_none_match != '"' . $etag . '"') { 
+            return; // etag is there but doesn't match
+        } else if ($if_modified_since && $if_modified_since != $lastModified) {
+            return; // if-modified-since is there but doesn't match
+        }
+        /**
+         * Nothing has changed since their last request - serve a 304 and exit
+         */
+        @header('HTTP/1.1 304 Not Modified');
+        self::end();
+    }
+
+    public static function cacheControl($set=null, $expires=null)
+    {
+        if(!is_null($set)) {
+            self::$vars['cache-control'] = $set;
+        } else if(!isset(\Birds\bird::$vars['cache-control'])) {
+            self::$vars['cache-control'] = 'private, must-revalidate';
+        }
+        if(!is_null($expires)) {
+            $expires = (int)$expires;
+            $cc = preg_replace('/\,.*/', '', self::$vars['cache-control']);
+            if (function_exists('header_remove')) {
+                header_remove('Cache-Control');
+                header_remove('Pragma');
+            }
+            @header('Cache-Control: '.self::$vars['cache-control']);
+            @header('Cache-Control: max-age='.$expires.', s-maxage='.$expires, false);
+        }
+        return self::$vars['cache-control'];
+    }
 
     /**
      * Replacement for $_COOKIE, since it's possible to issue more than one 
@@ -725,8 +772,18 @@ define('BIRD_VERSION', 0.1);
 if(!defined('BIRD_TIME')) {
 	define('BIRD_TIME', (isset($_SERVER['REQUEST_TIME_FLOAT']))?($_SERVER['REQUEST_TIME_FLOAT']):(microtime(true)));
 }
+if(!defined('BIRD_OS')) { // windows c:\
+    define('BIRD_OS', (substr(__FILE__, 1, 1)==':')?('windows'):('linux'));
+}
 if (!defined('BIRD_ROOT')) {
-    define('BIRD_ROOT', str_replace('\\', '/', dirname(__FILE__)));
+    if(BIRD_OS=='windows') {
+        define('BIRD_ROOT', str_replace('\\', '/', substr(dirname(__FILE__),2)));
+        if(substr(getcwd(),0,1)!=substr(__FILE__, 0, 1)) {
+            chdir(dirname(__FILE__));
+        }
+    } else {
+        define('BIRD_ROOT', dirname(__FILE__));
+    }
 }
 if (!defined('BIRD_APP_ROOT')) {
     define('BIRD_APP_ROOT', (strrpos(BIRD_ROOT, '/lib/vendor/')!==false)?(substr(BIRD_ROOT, 0, strrpos(BIRD_ROOT, '/lib/vendor/'))):(BIRD_ROOT));
