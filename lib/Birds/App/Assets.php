@@ -159,7 +159,7 @@ class Assets
                     $js[$fn] = filemtime($fn);
                     $jsn.=':'.$f;
                 } else {
-                    $r .= '<script src="'.bird::xml($f).'"></script>';
+                    $r .= '<script src="'.\Birds\bird::xml($f).'"></script>';
                 }
                 unset($m);
             }

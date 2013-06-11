@@ -93,12 +93,12 @@ class Layout
 
     public function renderAny($format)
     {
-        \Birds\App::header('Content-Type: '.$format);
+        //\Birds\App::header('Content-Type: '.$format);
         // prepare contents
         if(is_array($this->content)) {
             foreach($this->content as $slot=>$cs) {
                 foreach($cs as $i=>$c) {
-                    $r = Content::find($c);
+                    $r = Content::find($c, $format);
                     if($r) \Birds\App::output($r->render($format));
                     unset($r, $i, $c);
                 }
@@ -119,7 +119,7 @@ class Layout
         if(is_array($this->content)) {
             foreach($this->content as $slot=>$cs) {
                 foreach($cs as $i=>$c) {
-                    $r = Content::find($c);
+                    $r = Content::find($c, $format);
                     if($r) \Birds\App::output($r->render($format));
                     unset($r, $i, $c);
                 }
@@ -160,7 +160,7 @@ class Layout
                 } else if($n=='stylesheet') {
                     \Birds\App::output(\Birds\bird::minify($v));
                 } else if($n=='script') {
-                    if(self::$jsOnTop) \Birds\App::output(Assets::minify($v));
+                    if($this->jsOnTop) \Birds\App::output(Assets::minify($v));
                     else $js = \Birds\bird::minify($v);
                 } else {
                     if(substr($n, 0, 1)=='@') $n = substr($n,1);

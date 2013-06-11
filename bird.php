@@ -24,7 +24,7 @@
  * @license   http://creativecommons.org/licenses/by/3.0  CC BY 3.0
  * @link      http://birds.tecnodz.com/
  */
-namespace Birds;
+namespace Birds {
 class bird
 {
 	public static 
@@ -80,7 +80,12 @@ class bird
         } else if(is_null(self::$_name) && (!(self::$_name = self::site()) || self::$_name=='' )) {
             self::$_name = 'bird';
         }
-        Cache::siteKey(self::$_name);
+        if($site = self::site()) {
+            Cache::siteKey(self::$_name.'/'.$site);
+            unset($site);
+        } else {
+            Cache::siteKey(self::$_name);
+        }
         return self::$_name;
     }
 
@@ -117,7 +122,7 @@ class bird
                 self::$_site = '';
             }
             if (!defined('BIRD_SITE_ROOT')) {
-                define('BIRD_SITE_ROOT', (is_dir(BIRD_APP_ROOT.'/apps/'.self::$_site))?(BIRD_APP_ROOT.'/apps/'.self::$_site):(BIRD_APP_ROOT));
+                define('BIRD_SITE_ROOT', (is_dir(BIRD_APP_ROOT.'/sites/'.self::$_site))?(BIRD_APP_ROOT.'/sites/'.self::$_site):(BIRD_APP_ROOT));
             }
             unset($host, $site, $p);
         }
@@ -632,9 +637,13 @@ class bird
      * @param string $s
      * @return string Camelized Class name
      */
-    public static function camelize($s)
+    public static function camelize($s, $ucfirst=false)
     {
-        return lcfirst(str_replace(' ', '', ucwords(preg_replace('/[^a-z0-9A-Z]+/', ' ', $s))));
+        $cn = str_replace(' ', '', ucwords(preg_replace('/[^a-z0-9A-Z]+/', ' ', $s)));
+        if(!$ucfirst) {
+            $cn = lcfirst($cn);
+        }
+        return $cn;
     }
 
     /**
@@ -767,6 +776,11 @@ class bird
         }
     }
 }
+}
+
+namespace {
+
+class bird extends Birds\bird {};
 
 define('BIRD_VERSION', 0.1);
 if(!defined('BIRD_TIME')) {
@@ -799,4 +813,6 @@ if(BIRD_CLI && isset($_SERVER['argv'][0]) && substr(__FILE__, strlen($_SERVER['a
     $app = bird::app();
     $app->fly();
     unset($app);
+}
+
 }

@@ -38,9 +38,6 @@ class App
 	{
         $cfg=self::configFiles();
         array_unshift($cfg, bird::env());
-        if(!defined('BIRD_SITE_ROOT')) {
-            bird::site();
-        }
         $this->config = bird::recursiveReplace(
             array('$BIRD_ROOT', '$BIRD_APP_ROOT', '$BIRD_VAR', '$BIRD_VERSION', '$BIRD_SITE_ROOT'),
             array(  BIRD_ROOT,    BIRD_APP_ROOT,    BIRD_VAR,    BIRD_VERSION,    BIRD_SITE_ROOT),
@@ -288,7 +285,7 @@ class App
         }
         if (!$name) $name = bird::name();
         if (!$env)  $env  = bird::env();
-        $ckey="app/{$env}";
+        $ckey="Bird/{$env}";
         if(!($app=Cache::get($ckey, $expires))) {
             $app = new App($name, $env);
             Cache::set($ckey, $app);

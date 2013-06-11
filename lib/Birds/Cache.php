@@ -461,7 +461,7 @@ class Cache
     public static function siteKey($s=null)
     {
         if (!is_null($s)) {
-            self::$_siteKey = $s;
+            self::$_siteKey = 'Birds/'.$s;
         } else if (is_null(self::$_siteKey)) {
             self::$_siteKey = false;
         }
@@ -475,7 +475,11 @@ class Cache
         if (!is_null($s)) {
             self::$_cacheDir = $s;
         } else if (is_null(self::$_cacheDir)) {
-            self::$_cacheDir = BIRD_VAR.'/cache';
+            if(is_dir(BIRD_APP_ROOT.'/cache/Birds')) {
+                self::$_cacheDir = BIRD_APP_ROOT.'/cache/Birds';
+            } else {
+                self::$_cacheDir = BIRD_VAR.'/cache';
+            }
         }
         unset($s);
         return self::$_cacheDir;
