@@ -134,6 +134,8 @@ class App
         if(isset($this->config['Birds']['language'])) bird::$lang=$this->config['Birds']['language'];
         else if(isset($this->config['Birds']['languages'])) bird::$lang=self::language($this->config['Birds']['languages']);
 
+        //set_error_handler(array('bird', 'log'));
+
         self::$request=null;
         $req = self::request();
         try {
@@ -146,9 +148,12 @@ class App
                 $this->error(404, $format);
             }
         } catch(App\HttpException $e) {
+            if($e->getCode()<300) {
+                exit();
+            }
             $this->error($e->getCode(), $format);
         } catch(\Exception $e) {
-            bird::log(__METHOD__.', '.__LINE__);
+            bird::log(__METHOD__.', '.__LINE__.' '.$e->getMessage());
             $this->error(500, $format);
         }
         self::end();
@@ -177,6 +182,7 @@ class App
             Cache::set('session/'.Session::$id, bird::$session, Session::$expires);
             //bird::log('closing session: session/'.Session::$id.' '.Session::name(), var_export(bird::$session, true));
         }
+        throw new App\HttpException(200);
         //bird::log('closing app');
     }
 
@@ -261,6 +267,14 @@ class App
     /**
      * Output handler: this should manage if the output should be buffered or not.
      */
+    public static function outputFile($s)
+    {
+        echo file_get_contents($s);
+    }
+
+    /**
+     * Output handler: this should manage if the output should be buffered or not.
+     */
     public static function header($s)
     {
         if(is_array($s)) {
@@ -304,6 +318,9 @@ class App
         list($server, $domain) = explode('.', bird::serverName(), 2);
         $cfg=array(BIRD_ROOT.'/config/bird.yml');
         if(BIRD_APP_ROOT!=BIRD_ROOT) {
+            if($name!='bird' && file_exists($f=BIRD_APP_ROOT.'/config/bird.yml')) {
+                $cfg[]=$f;
+            }
             if(file_exists($f=BIRD_APP_ROOT.'/config/'.$name.'@'.$server.'.yml')) {
                 $cfg[]=$f;
             }

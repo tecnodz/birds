@@ -281,7 +281,7 @@ class bird
             'Last-Modified: '.
             gmdate("D, d M Y H:i:s", $lastModified) . ' GMT'
         );
-        $cacheControl = \Birds\bird::cacheControl(null, $expires);
+        $cacheControl = self::cacheControl(null, $expires);
         if ($expires && $cacheControl=='public') {
             @header('Expires: '. gmdate("D, d M Y H:i:s", time() + $expires) . ' GMT');
         }
@@ -308,14 +308,18 @@ class bird
         if(!is_null($set)) {
             self::$vars['cache-control'] = $set;
         } else if(!isset(\Birds\bird::$vars['cache-control'])) {
-            self::$vars['cache-control'] = 'private, must-revalidate';
+            if(!is_null($expires)) {
+                self::$vars['cache-control'] = 'public, must-revalidate';
+            } else {
+                self::$vars['cache-control'] = 'private, must-revalidate';
+            }
         }
         if(!is_null($expires)) {
             $expires = (int)$expires;
             $cc = preg_replace('/\,.*/', '', self::$vars['cache-control']);
             if (function_exists('header_remove')) {
-                header_remove('Cache-Control');
-                header_remove('Pragma');
+                @header_remove('Cache-Control');
+                @header_remove('Pragma');
             }
             @header('Cache-Control: '.self::$vars['cache-control']);
             @header('Cache-Control: max-age='.$expires.', s-maxage='.$expires, false);
@@ -760,7 +764,7 @@ class bird
     public static function autoload($c, $l=true)
     {
         $c = str_replace(array('_', '\\'), '/', $c);
-        if (!(file_exists($f=BIRD_ROOT."/lib/{$c}.php") || (strpos($c, '/')===false && file_exists($f=BIRD_ROOT."/lib/{$c}/{$c}.php")) || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.php") || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.class.php"))) {
+        if (!(file_exists($f=BIRD_ROOT."/lib/{$c}.php") || (strpos($c, '/')===false && file_exists($f=BIRD_ROOT."/lib/{$c}/{$c}.php")) || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.php") || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.class.php") || (strpos($c, '/')===false && file_exists($f=BIRD_APP_ROOT."/lib/{$c}/{$c}.php")))) {
             $f=false;
             foreach(self::$lib as $libi=>$dir) {
                 if(substr($dir, -1)=='/') tdz::$lib[$libi]=substr($dir, 0, strlen($dir)-1);

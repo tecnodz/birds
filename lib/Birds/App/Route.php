@@ -151,7 +151,7 @@ class Route
 
         // transform any non-slug characters (except /_.) into lower-case ascii
         if(substr($route,0,1)!='/') $route = '/'.$route;
-		$route = \Birds\bird::slug(urldecode($route), '/_.');
+		$route = urldecode($route);
         if($updateScriptName) \Birds\bird::scriptName($route, false, true);
         if($route=='') $route='/';
         $routes = array();
@@ -199,11 +199,15 @@ class Route
      */
 	public static function validateRoute($f, $ext=false, $multiviews=false)
 	{
+        if(!file_exists($f)) {
+            return false;
+        }
         try {
             $r = \Birds\Yaml::read($f, 3600, array('language'=>\Birds\bird::$lang));
             if($r) {
-                if($ext && isset($r['formats']) && !in_array($ext, $r['formats'])) $r=false;
-                else if($multiviews && (!isset($r['options']['multiviews']) || $r['options']['multiviews']==false)) $r=false;
+                if($ext && isset($r['formats']) && !in_array($ext, $r['formats']) && !in_array('*', $r['formats'])) $r=false;
+                else if($ext) $ext = '';
+                if($multiviews && (!isset($r['options']['multiviews']) || $r['options']['multiviews']==false)) $r=false;
                 else if(BIRD_CLI && (!isset($r['options']['shell']) || $r['options']['shell']==false)) $r=false;
                 else if(!BIRD_CLI && ((isset($r['options']['http']) && $r['options']['http']==false) || (isset($r['options']['shell']) && $r['options']['shell']==true))) $r=false;
             }
@@ -236,6 +240,7 @@ class Route
             // text
             'txt'   => 'text/plain',
             'html'  => 'text/html',
+            'xhtml' => 'text/html',
             'htm'   => 'text/html',
             'xml'   => 'text/xml',
             'php'   => 'text/html',
@@ -246,6 +251,12 @@ class Route
             'less'  => 'text/css',
             'pdf'   => 'application/pdf',
             'js'    => 'application/javascript',
+            'json'  => 'application/json',
+            'svg'   => 'image/svg+xml',
+            'otf'   => 'font/opentype',
+            'ttf'   => 'application/x-font-truetype',
+            'woff'  => 'application/font-woff',
+            'eot'   => 'application/vnd.ms-fontobject',
             'xlsx'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'xltx'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
             'potx'  => 'application/vnd.openxmlformats-officedocument.presentationml.template',

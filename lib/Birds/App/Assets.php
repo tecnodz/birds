@@ -71,11 +71,51 @@ class Assets
         if(isset($f)) {
             // optimize
             // add headers
-
-            \Birds\bird::download($f, $format);
+            self::download($f, $format, null, 0, false, false, false);
         } else {
             throw new \Birds\App\HttpException(404);
         }
+    }
+
+    public static function renderResource($format=null)
+    {
+        $f = '/'.implode('/', bird::urlParam());
+        if(preg_match('/\.([a-z]{2,6})$/i', $f, $m)) {
+            $ext = strtolower($m[1]);
+            $format = Birds\App\Route::mimeType($ext);
+            unset($m);
+        } else {
+            $ext = Birds\App\Route::mimeType($format);
+        }
+        $root = dirname(__FILE__);
+        $sf = array($root.$f);
+        if(!file_exists($sf[0])) {
+            Birds\App::error(404);
+            return false;
+        }
+        $df = bird::app()->Birds['document-root'].bird::scriptName(true);
+        unset($f);
+        $lmod = filemtime($sf[0]);
+        $req = Birds\App::request();
+        if(isset($req['query-string']) && $req['query-string']!='' && preg_match('#^[/a-z0-9\-\_\,]+$#i', $req['query-string'])) {
+            foreach(preg_split('#,#', $req['query-string'], null, PREG_SPLIT_NO_EMPTY) as $f) {
+                if(file_exists($f=$root.'/'.$f.'.'.$ext)) {
+                    $mod=filemtime($f);
+                    if($mod > $lmod) {
+                        $lmod = $mod;
+                    }
+                    $sf[] = $f;
+                }
+                unset($f, $mod);
+            }
+        }
+        if(!file_exists($df) || $lmod > filemtime($df)) {
+            Birds\App\Assets::combine($sf, $df, $ext);
+        }
+        //\Birds\App::header('Content-Type: '.$format);
+        //\Birds\App::outputFile($df);
+        \Birds\App\Assets::download($df, $format, null, 0, false, false, false);
+        \Birds\App::end();
     }
 
     public static function file($url, $root=null, $abs=true)
@@ -190,44 +230,7 @@ class Assets
                             }
                         }
                         $fs=array_keys(${$type});
-                        if($type=='css') {
-                            foreach($fs as $i=>$cf) {
-                                if(substr($cf, -5)=='.less') {
-                                    if(!isset($lc)) {
-                                        if(!class_exists('lessc')) require_once BIRD_ROOT.'/lib/lessphp/lessc.inc.php';
-                                        $lc = new \lessc();
-                                        $lc->setVariables(array('assets-url'=>'"'.self::$assetsUrl.'"'));
-                                        //$lc->setImportDir(array(dirname($root.$less).'/'),$root);
-                                        $lc->registerFunction('dechex', 'less_dechex');
-                                    }
-                                    $lc->checkedCompile($cf, $cf.'.css');
-                                    if(file_exists($cf.'.css')) {
-                                        $fs[$i].='.css';
-                                    }
-                                }
-                            }
-                        }
-                        if($compress){
-                            // try yui compressor
-                            $cmd = self::$paths['cat'].' '.implode(' ',$fs).' | '.self::$paths['java'].' -jar '.BIRD_ROOT.'/lib/yui/yuicompressor.jar --type '.$type.' -o '.$fn;
-                            exec($cmd, $output, $ret);
-                            if(!$ret) {
-                                // $fn was minified -- no need to make it manually
-                                $combine = false;
-                                chmod($fn, 0666);
-                            }
-                        }
-                        if($combine){
-                            foreach($fs as $i=>$fname) {
-                                if($i > 0) {
-                                    copy($fname, $fn);
-                                } else {
-                                    file_put_contents($fn, file_get_contents($fname),  FILE_APPEND |  LOCK_EX );
-                                }
-                                unset($fname, $i);
-                            }
-                            chmod($fn, 0666);
-                        }
+                        self::combine(array_keys(${$type}), $fn, $type, $compress);
                     }
 
                     if($raw) {
@@ -247,6 +250,66 @@ class Assets
         }
         return $r;
     }
+
+
+    public static function combine($fs, $fn, $type, $compress=true)
+    {
+        if(!is_writable($fn) && !is_writable(dirname($fn))) {
+            return false;
+        }
+        if(!is_array($fs)) {
+            $fs = array($fs);
+        }
+        if($type=='css') {
+            foreach($fs as $i=>$cf) {
+                if(substr($cf, -5)=='.less') {
+                    if(!isset($lc)) {
+                        if(!class_exists('lessc')) require_once BIRD_ROOT.'/lib/lessphp/lessc.inc.php';
+                        $lc = new \lessc();
+                        $lc->setVariables(array('assets-url'=>'"'.self::$assetsUrl.'"'));
+                        //$lc->setImportDir(array(dirname($root.$less).'/'),$root);
+                        $lc->registerFunction('dechex', 'less_dechex');
+                    }
+                    $lc->checkedCompile($cf, $cf.'.css');
+                    if(file_exists($cf.'.css')) {
+                        $fs[$i].='.css';
+                    }
+                }
+            }
+            unset($lc);
+        }
+        $combine = true;
+        if($compress){
+            // try yui compressor
+            $cmd = self::$paths['cat'].' '.implode(' ',$fs).' | '.self::$paths['java'].' -jar '.BIRD_ROOT.'/lib/yui/yuicompressor.jar --type '.$type.' -o '.$fn;
+            \bird::log($cmd);
+            exec($cmd, $output, $ret);
+            if(!$ret) {
+                // $fn was minified -- no need to make it manually
+                $combine = false;
+                chmod($fn, 0666);
+            }
+        }
+        if($combine){
+            // atomic writes
+            $tmp = tempnam(dirname($fn), '.' . basename($fn));
+
+            foreach($fs as $i=>$fname) {
+                if($i == 0) {
+                    copy($fname, $tmp);
+                } else {
+                    file_put_contents($tmp, file_get_contents($fname),  FILE_APPEND |  LOCK_EX );
+                }
+                unset($fname, $i);
+            }
+            rename($tmp, $fn);
+            unlink($tmp);
+            chmod($fn, 0666);
+        }
+        return true;
+
+    }
+
 
     /**
      * File downloader with support for HTTP 1.1
@@ -280,13 +343,13 @@ class Assets
                 @header('Content-Type: ' . $format);
         }
         $gzip = false;
-        if (substr($format, 0, 5) == 'text/' && isset($_SERVER['HTTP_ACCEPT_ENCODING']) && substr_count($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip'))
+        if (($format=='application/javascript' || substr($format, 0, 5) == 'text/') && isset($_SERVER['HTTP_ACCEPT_ENCODING']) && substr_count($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip'))
             $gzip = true;
         if (substr($format, 0, 5) == 'text/')
-            header('Vary: Accept-Encoding', false);
+            @header('Vary: Accept-Encoding', false);
         if ($nocache) {
-            header('Cache-Control: no-cache, no-store, max-age=0, must-revalidate');
-            header('Expires: Thu, 11 Oct 2007 05:00:00 GMT'); // Date in the past
+            @header('Cache-Control: no-cache, no-store, max-age=0, must-revalidate');
+            @header('Expires: Thu, 11 Oct 2007 05:00:00 GMT'); // Date in the past
         } else {
             \Birds\bird::getBrowserCache(md5_file($file) . (($gzip) ? (';gzip') : ('')), $lastmod, $expires);
         }
@@ -308,15 +371,15 @@ class Assets
         }
         if ($gzip) {
             $gzf=BIRD_VAR . '/cache/download/' . md5_file($file);
-            if (!file_exists($gzf) || filemtime($gzf) > $lastmod) {                
+            if (!file_exists($gzf) || filemtime($gzf) < $lastmod) {                
                 $s = file_get_contents($file);
                 $gz = gzencode($s, 9);
-                \Birds\bird::save($gzf, $gz, true);                
+                \Birds\bird::save($gzf, $gz, true);
             }
             $gze = 'gzip';
             if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'x-gzip') !== false)
                 $gze = 'x-gzip';
-            header('Content-Encoding: ' . $gze);
+            @header('Content-Encoding: ' . $gze);
             $file = $gzf;
         }
         $size = filesize($file);
@@ -332,7 +395,7 @@ class Assets
                     //list($range, $extra_ranges) = explode(',', $range_orig, 2);
                 }
             }
-            header('Accept-Ranges: bytes');
+            @header('Accept-Ranges: bytes');
         }
 
         //figure out download piece from range (if set)
@@ -349,7 +412,7 @@ class Assets
             header('HTTP/1.1 206 Partial Content');
             header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $size);
         }
-        header('Content-Length: ' . ($seek_end - $seek_start + 1));
+        @header('Content-Length: ' . ($seek_end - $seek_start + 1));
 
         //open the file
         $fp = fopen($file, 'rb');

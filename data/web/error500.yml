@@ -1,0 +1,27 @@
+# en
+---
+language: en
+meta:
+  header:
+    - "HTTP/1.1 500 Internal Server Error"
+    - "Status: 500 Internal Server Error"
+  title: "We had a problem..."
+  "@language": en
+content:
+  body:
+    - "<h1>We had a problem...</h1><p>Seems like this page is unresponsive or has a bug. We apologize for this issue, it should be fixed shortly.</p>"
+...
+
+# pt
+---
+language: pt
+meta:
+  header:
+    - "HTTP/1.1 500 Internal Server Error"
+    - "Status: 500 Internal Server Error"
+  title: "Tivemos um problema..."
+  "@language": pt
+content:
+  body:
+    - "<h1>Tivemos um problema...</h1><p>Parece que esta página não está respondendo ou possui um bug. Pedimos desculpas pela ocorrência, ela deve ser resolvida logo.</p>"
+...
