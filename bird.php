@@ -39,7 +39,7 @@ class bird
         $timeout,
         $vars=array(),
         $session=null;
-    protected static $_name, $_env='prod', $_site, $_server, $app, $scriptName, $scriptRealName, $urlParam, $requestUri;
+    protected static $_name, $_env='prod', $_site, $_server, $app, $scriptName, $scriptRealName, $urlParam;
 
 	/**
 	 * Catches current bird application and route
@@ -190,6 +190,21 @@ class bird
             return self::$scriptRealName;
         }
         return self::$scriptName;
+    }
+
+    public static function requestUri($qs=null)
+    {
+        if(is_null($qs)) {
+            if(isset($_SERVER['REDIRECT_QUERY_STRING'])) {
+                $qs = $_SERVER['REDIRECT_QUERY_STRING'];
+            } else if(isset($_SERVER['QUERY_STRING'])) {
+                $qs = $_SERVER['QUERY_STRING'];
+            }
+        } else if(!is_object($qs)) {
+            $qs = http_build_query($qs);
+        }
+        return self::scriptName(true)
+            . (($qs)?('?'.$qs):(''));
     }
 
     public static function urlParam($url=null)

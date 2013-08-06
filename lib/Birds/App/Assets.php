@@ -72,31 +72,35 @@ class Assets
             // optimize
             // add headers
             self::download($f, $format, null, 0, false, false, false);
+            \Birds\App::end();
         } else {
             throw new \Birds\App\HttpException(404);
         }
     }
 
+    /**
+     * Outputs Bird resources (files located at Birds\App\Resources)
+     * and writes the combined output at the document-root
+     */
     public static function renderResource($format=null)
     {
-        $f = '/'.implode('/', bird::urlParam());
+        $f = '/'.implode('/', \bird::urlParam());
         if(preg_match('/\.([a-z]{2,6})$/i', $f, $m)) {
             $ext = strtolower($m[1]);
-            $format = Birds\App\Route::mimeType($ext);
+            $format = Route::mimeType($ext);
             unset($m);
         } else {
-            $ext = Birds\App\Route::mimeType($format);
+            $ext = Route::mimeType($format);
         }
-        $root = dirname(__FILE__);
+        $root = BIRD_ROOT.'/lib/Birds/App/Resources/'.$ext;
         $sf = array($root.$f);
         if(!file_exists($sf[0])) {
-            Birds\App::error(404);
-            return false;
+            throw new HttpException(404);
         }
-        $df = bird::app()->Birds['document-root'].bird::scriptName(true);
+        $df = \bird::app()->Birds['document-root'].\bird::scriptName(true);
         unset($f);
         $lmod = filemtime($sf[0]);
-        $req = Birds\App::request();
+        $req = \Birds\App::request();
         if(isset($req['query-string']) && $req['query-string']!='' && preg_match('#^[/a-z0-9\-\_\,]+$#i', $req['query-string'])) {
             foreach(preg_split('#,#', $req['query-string'], null, PREG_SPLIT_NO_EMPTY) as $f) {
                 if(file_exists($f=$root.'/'.$f.'.'.$ext)) {
@@ -110,11 +114,11 @@ class Assets
             }
         }
         if(!file_exists($df) || $lmod > filemtime($df)) {
-            Birds\App\Assets::combine($sf, $df, $ext);
+            Assets::combine($sf, $df, $ext);
         }
         //\Birds\App::header('Content-Type: '.$format);
         //\Birds\App::outputFile($df);
-        \Birds\App\Assets::download($df, $format, null, 0, false, false, false);
+        Assets::download($df, $format, null, 0, false, false, true);
         \Birds\App::end();
     }
 
@@ -206,9 +210,10 @@ class Assets
             unset($f);
         }
         if($combine) {
-            $time=date('YmdHis');
             foreach(array('js', 'css') as $type) {
                 if(${$type.'n'}) {
+                    $t = max(${$type});
+                    $time=date('YmdHis', $t);
                     $f = md5(\Birds\bird::site().${$type.'n'}).'.'.$type;
                     $fn = self::file(self::$assetsUrl.'/'.$f);
                     if(!$fn || filemtime($fn)<max(${$type})) { // generate
@@ -281,13 +286,17 @@ class Assets
         $combine = true;
         if($compress){
             // try yui compressor
-            $cmd = self::$paths['cat'].' '.implode(' ',$fs).' | '.self::$paths['java'].' -jar '.BIRD_ROOT.'/lib/yui/yuicompressor.jar --type '.$type.' -o '.$fn;
-            \bird::log($cmd);
+            $tmp = tempnam(dirname($fn), '.'.basename($fn));
+            $cmd = self::$paths['cat'].' '.implode(' ',$fs).' | '.self::$paths['java'].' -jar '.BIRD_ROOT.'/lib/yui/yuicompressor.jar --type '.$type.' -o '.$tmp;
             exec($cmd, $output, $ret);
-            if(!$ret) {
-                // $fn was minified -- no need to make it manually
-                $combine = false;
-                chmod($fn, 0666);
+            if(file_exists($tmp)) {
+                if(rename($tmp,$fn)) {
+                    // $fn was minified -- no need to make it manually
+                    chmod($fn, 0666);
+                    $combine = false;
+                } else {
+                    @unlink($tmp);
+                }
             }
         }
         if($combine){
@@ -302,9 +311,11 @@ class Assets
                 }
                 unset($fname, $i);
             }
-            rename($tmp, $fn);
-            unlink($tmp);
-            chmod($fn, 0666);
+            if(rename($tmp, $fn)) {
+                unlink($tmp);
+            } else {
+                chmod($fn, 0666);
+            }
         }
         return true;
 
@@ -437,6 +448,7 @@ class Assets
         }
 
         fclose($fp);
+        $fp = null;
         if($exit) {
             \Birds\bird::end();
         }

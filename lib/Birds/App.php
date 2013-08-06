@@ -32,7 +32,7 @@ class App
 {
 
     protected $config;
-    protected static $request, $response, $instance, $router='Birds\\App\\Route';
+    protected static $request, $response, $instance, $router='Birds\\App\\Route', $running=false;
 
 	public function __construct()
 	{
@@ -122,6 +122,7 @@ class App
     
 	public function fly($format=null)
 	{
+        self::$running = true;
         if(!isset($this->config['Birds']['routes-dir'])) {
             bird::log('Don\t know where to go -- please set Birds->routes-dir');
             $this->error(404);
@@ -149,13 +150,14 @@ class App
             }
         } catch(App\HttpException $e) {
             if($e->getCode()<300) {
-                exit();
+                return;
             }
             $this->error($e->getCode(), $format);
         } catch(\Exception $e) {
             bird::log(__METHOD__.', '.__LINE__.' '.$e->getMessage());
             $this->error(500, $format);
         }
+        self::$running = false;
         self::end();
 	}
 
@@ -166,6 +168,7 @@ class App
 
     public function error($no=500, $format=null)
     {
+        self::$running = false;
         $err = App\Route::find('/error'.$no);
         if($err) {
             $err->render($format);
@@ -175,15 +178,16 @@ class App
         }
     }
 
-    public static function end()
+    public static function end($exception=true)
     {
         if(!is_null(bird::$session)) {
             // store session
             Cache::set('session/'.Session::$id, bird::$session, Session::$expires);
             //bird::log('closing session: session/'.Session::$id.' '.Session::name(), var_export(bird::$session, true));
         }
-        throw new App\HttpException(200);
-        //bird::log('closing app');
+        if(self::$running && $exception) {
+            throw new App\HttpException(200);
+        }
     }
 
     /**
@@ -193,47 +197,56 @@ class App
      * 
      * @return array request directives
      */
-    public static function request()
+    public static function request($p=null)
     {
-        if(!is_null(self::$request)) return self::$request;
-
-        $removeExtensions=array('html', 'htm', 'php');
-        self::$request['shell']=BIRD_CLI;
-        self::$request['method']=(!self::$request['shell'])?(strtolower($_SERVER['REQUEST_METHOD'])):('get');
-        self::$request['ajax']=(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH']=='XMLHttpRequest');
-        if (!self::$request['shell']) {
-            self::$request['hostname']=$_SERVER['HTTP_HOST'];
-            self::$request['host']=((isset($_SERVER['HTTPS']))?('https://'):('http://')).self::$request['hostname'];
-            $ui=@parse_url($_SERVER['REQUEST_URI']);
-            if(!$ui) {
-                $ui=array();
-                if(strpos($_SERVER['REQUEST_URI'], '?')!==false) {
-                    $ui['path']=substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '?'));
-                    $ui['query']=substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], '?')+1);
-                } else {
-                    $ui['path']=$_SERVER['REQUEST_URI'];
+        if(is_null(self::$request)) {
+            $removeExtensions=array('html', 'htm', 'php');
+            self::$request['shell']=BIRD_CLI;
+            self::$request['method']=(!self::$request['shell'])?(strtolower($_SERVER['REQUEST_METHOD'])):('get');
+            self::$request['ajax']=(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH']=='XMLHttpRequest');
+            if (!self::$request['shell']) {
+                self::$request['hostname']=$_SERVER['HTTP_HOST'];
+                self::$request['host']=((isset($_SERVER['HTTPS']))?('https://'):('http://')).self::$request['hostname'];
+                $ui=@parse_url($_SERVER['REQUEST_URI']);
+                if(!$ui) {
+                    $ui=array();
+                    if(strpos($_SERVER['REQUEST_URI'], '?')!==false) {
+                        $ui['path']=substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '?'));
+                        $ui['query']=substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], '?')+1);
+                    } else {
+                        $ui['path']=$_SERVER['REQUEST_URI'];
+                    }
                 }
+            } else {
+                $arg = $_SERVER['argv'];
+                self::$request['shell'] = array_shift($arg);
+                $ui = array_shift($arg);
+                $ui=parse_url($ui);
+                if(isset($ui['query'])) {
+                    parse_str($ui['query'], $_GET);
+                }
+                self::$request['argv']=$arg;
+                unset($arg);
             }
-        } else {
-            $arg = $_SERVER['argv'];
-            self::$request['shell'] = array_shift($arg);
-            $ui = array_shift($arg);
-            $ui=parse_url($ui);
-            if(isset($ui['query'])) {
-                parse_str($ui['query'], $_GET);
+            self::$request['query-string']=(isset($ui['query']))?($ui['query']):('');
+            self::$request['script-name']=$ui['path'];
+            if (preg_match('/\.('.implode('|', $removeExtensions).')$/i', $ui['path'], $m)) {
+                self::$request['self']=substr($ui['path'],0,strlen($ui['path'])-strlen($m[0]));
+                self::$request['extension']=substr($m[0],1);
+            } else {
+                self::$request['self']=$ui['path'];
             }
-            self::$request['argv']=$arg;
+            unset($ui);
+            self::$request['get']=$_GET;
+            self::$request['post']=$_POST+$_FILES;
         }
-        self::$request['query-string']=(isset($ui['query']))?($ui['query']):('');
-        self::$request['script-name']=$ui['path'];
-        if (preg_match('/\.('.implode('|', $removeExtensions).')$/i', $ui['path'], $m)) {
-            self::$request['self']=substr($ui['path'],0,strlen($ui['path'])-strlen($m[0]));
-            self::$request['extension']=substr($m[0],1);
-        } else {
-            self::$request['self']=$ui['path'];
+        if(!is_null($p)) {
+            if(isset(self::$request[$p])) {
+                return self::$request[$p];
+            } else {
+                return false;
+            }
         }
-        self::$request['get']=$_GET;
-        self::$request['post']=$_POST+$_FILES;
         return self::$request;
     }
 
