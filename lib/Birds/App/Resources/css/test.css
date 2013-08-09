@@ -1,0 +1,52 @@
+body {
+    background-color:#A7A7A7;
+    background-image:linear-gradient(top, #A7A7A7 0%, #E4E4E4 51%);
+    background-image:-webkit-linear-gradient(top, #A7A7A7 0%, #E4E4E4 51%);
+    background-image:-ms-linear-gradient(top, #A7A7A7 0%, #E4E4E4 51%);
+    background-image:-webkit-gradient(
+        linear,
+        left top,
+        left bottom,
+        color-stop(0, #A7A7A7),
+        color-stop(0.51, #E4E4E4)
+    );
+}
+.app {
+   -webkit-transform-origin: 100% 0;
+      -moz-transform-origin: 100% 0;
+       -ms-transform-origin: 100% 0;
+        -o-transform-origin: 100% 0;
+           transform-origin: 100% 0;
+  -webkit-transition: all 0.5s ease-in-out, visibility 0s linear 1s;
+     -moz-transition: all 0.5s ease-in-out, visibility 0s linear 1s;
+      -ms-transition: all 0.5s ease-in-out, visibility 0s linear 1s;
+       -o-transition: all 0.5s ease-in-out, visibility 0s linear 1s;
+          transition: all 0.5s ease-in-out, visibility 0s linear 1s;
+ -webkit-backface-visibility: hidden;
+  -webkit-transform-style: flat;
+}
+.app-container {
+    background:url(../img/cordova.png) 50% 50% no-repeat rgba(102, 204, 255, 0.5);
+}
+
+.app.app-unloaded, .app.app-closed{
+   -webkit-transform: rotateY(-90deg);
+      -moz-transform: rotateY(-90deg);
+       -ms-transform: rotateY(-90deg);
+        -o-transform: rotateY(-90deg);
+           transform: rotateY(-90deg);
+}
+.app.app-loaded{
+   -webkit-transform: rotateY(0deg);
+      -moz-transform: rotateY(0deg);
+       -ms-transform: rotateY(0deg);
+        -o-transform: rotateY(0deg);
+           transform: rotateY(0deg);
+}
+.app-close{position:fixed;right:0;bottom:0;background:red;z-index:10;}
+.app-thumbs{position:fixed;right:0;top:0;z-index:10;}
+.app-thumb{display:block;width:30px;height:30px;border:1px solid red;}
+#a .app-container, .app-thumb-a{background-color:#ffcc00;}
+#b .app-container, .app-thumb-b{background-color:#ccff00;}
+#a .app-container{background-color:#ffcc00;}
+.app-data{position:absolute;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;background:#fff;}

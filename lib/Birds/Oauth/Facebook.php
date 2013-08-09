@@ -29,12 +29,14 @@
  */
 namespace Birds\Oauth;
 class Facebook extends \Birds\Oauth {
-	
-	protected 
-		$prefix = 'facebook',
-		$authUrl = 'https://www.facebook.com/dialog/oauth',
-		$tokenUrl = 'https://graph.facebook.com/oauth/access_token',
-		$graphUrl = 'https://graph.facebook.com/me',
-		$scope = array('email');
-	
+    
+    protected 
+        $prefix = 'facebook',
+        $authUrl = 'https://www.facebook.com/dialog/oauth',
+        $tokenUrl = 'https://graph.facebook.com/oauth/access_token',
+        $graphUrl = 'https://graph.facebook.com/me',
+        $scope = array('email');
+    
+    public static
+        $sessionMap=array('id'=>'id', 'name'=>'name', 'username'=>'username', 'image'=>'http://graph.facebook.com/$id/picture?type=large', 'email'=>'email', 'modified'=>'updated_time');
 }

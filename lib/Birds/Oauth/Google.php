@@ -36,6 +36,8 @@ class Google extends \Birds\Oauth {
 		$tokenUrl = 'https://accounts.google.com/o/oauth2/token',
 		$graphUrl = 'https://www.googleapis.com/oauth2/v1/userinfo',
 		$scope = array('openid', 'profile', 'email');
+    public static
+        $sessionMap=array('id'=>'id', 'name'=>'name', 'image'=>'picture', 'email'=>'email');
 	
 	protected function authorize(Array $scope = array(), $scope_seperator = '+'){
 		parent::authorize($scope, $scope_seperator, '&response_type=code');

@@ -371,30 +371,51 @@ class bird
     {
         $url = ($url == '') ? (self::scriptName()) : ($url);
         @header('HTTP/1.1 301 Moved Permanently', true);
-        if (preg_match('/\:\/\//', $url)) {
-            @header("Location: $url", true, 301);
-            $str = "<html><head><meta http-equiv=\"Refresh\" content=\"0;".
-                   "URL={$url}\"></head><body><body></html>";
-        } else {
-            $scheme = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']=='on')||(isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO']=='https')) ? ('https') : ('http');
-            @header("Location: {$scheme}://{$_SERVER['HTTP_HOST']}{$url}", true, 301);
-            $str = "<html><head><meta http-equiv=\"Refresh\" content=\"0;".
-                   "URL={$scheme}://{$_SERVER['HTTP_HOST']}{$url}\">".
-                   "</head><body><body></html>";
-            unset($scheme);
-        }
         @header(
             'Cache-Control: no-store, no-cache, must-revalidate,'.
             'post-check=0, pre-check=0'
         );
-        @header('Content-Length: '.strlen($str));
-        echo $str;
-        unset($str);
-        flush();
-        ob_end_flush();
-
-        self::end();
+        if (preg_match('/\:\/\//', $url)) {
+            @header("Location: $url", true, 301);
+            self::output("<html><head><meta http-equiv=\"Refresh\" content=\"0;URL={$url}\"></head><body><body></html>");
+        } else {
+            $scheme = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']=='on')||(isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO']=='https')) ? ('https') : ('http');
+            @header("Location: {$scheme}://{$_SERVER['HTTP_HOST']}{$url}", true, 301);
+            self::output("<html><head><meta http-equiv=\"Refresh\" content=\"0;URL={$scheme}://{$_SERVER['HTTP_HOST']}{$url}\"></head><body><body></html>");
+        }
     }
+
+    public static function output($s, $h=array(), $end=true)
+    {
+        //@ini_set('output_buffering', 0);
+        //@ini_set('zlib.output_compression', 0);
+        if(!is_array($h) && $h) {
+            $h = array($h);
+        }
+        $l=false;
+        foreach($h as $i=>$v) {
+            if(!is_int($i)) {
+                $v = $i.': '.$v;
+            } else if(strlen($v)<=5) {
+                $v = 'Content-Type: '.App\Route::mimeType($v, false);
+            }
+            @header($v, true); //  Birds\App::header
+            if(substr(strtolower($v), 0, 15)=='content-length:') $l=true;
+            unset($i, $v);
+        }
+        if(!$l) {
+            @header('Content-Length: '.strlen($s));
+        }
+        echo $s; // Birds\App::output($s."\n");
+
+        while (ob_get_level()) ob_end_flush();
+        @ob_flush();
+        flush();
+
+        if($end) {
+            self::end();
+        }
+    }    
 
     /**
      * Debugging method
@@ -690,7 +711,7 @@ class bird
     {
         if (is_array($s)) {
             foreach ($s as $k => $v) {
-                $s[$k] = tdz::xmlEscape($v);
+                $s[$k] = self::xml($v);
                 unset($k, $v);
             }
             return $s;
@@ -730,9 +751,12 @@ class bird
      * @return bool              true on success, false on error
      * @uses    xdb_pathtofile
      */
-    public static function save($file, $contents, $recursive=false, $mask=0666) 
+    public static function save($file, $contents, $recursive=false, $mask=0666, $lmod=0) 
     {
         if ($file=='') {
+            return false;
+        }
+        if($lmod && file_exists($file) && $lmod <= filemtime($file)) {
             return false;
         }
         $dir = dirname($file);

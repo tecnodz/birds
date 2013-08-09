@@ -29,18 +29,21 @@
  */
 namespace Birds\Oauth;
 class Twitter extends \Birds\Oauth {
-	
-	protected 
-		$prefix = 'twitter',
-		$authUrl = 'https://api.twitter.com/oauth/authorize',
-		$tokenUrl = 'https://api.twitter.com/oauth/access_token',
-		$requestTokenUrl = 'https://api.twitter.com/oauth/request_token',
-		$graphUrl = 'https://api.twitter.com/1.1/account/verify_credentials.json?skip_status=1',
-		$scope;
+    
+    protected 
+        $prefix = 'twitter',
+        $authUrl = 'https://api.twitter.com/oauth/authorize',
+        $tokenUrl = 'https://api.twitter.com/oauth/access_token',
+        $requestTokenUrl = 'https://api.twitter.com/oauth/request_token',
+        $graphUrl = 'https://api.twitter.com/1.1/account/verify_credentials.json?skip_status=1',
+        $scope,
+        $session;
+    public static
+        $sessionMap=array('id'=>'id', 'name'=>'name', 'username'=>'screen_name', 'image'=>array('profile_image_url_https','profile_image_url','default_profile_image'));
 
-	
-	public function requestAccessToken($method = 'POST', Array $params = array(), $returnType = 'flat', Array $values = array('oauth_token', 'oauth_token_secret')){
-		parent::requestAccessToken($method, $params, $returnType, $values);
-	}
-	
+    
+    public function requestAccessToken($method = 'POST', Array $params = array(), $returnType = 'flat', Array $values = array('oauth_token', 'oauth_token_secret')){
+        parent::requestAccessToken($method, $params, $returnType, $values);
+    }
+    
 }

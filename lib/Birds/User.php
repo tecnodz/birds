@@ -71,6 +71,12 @@ class User {
         $cfg = bird::app()->User['SingleSignOn'];
         $bye = (isset($cfg['signOutParam']) && $cfg['signOutParam'])?($cfg['signOutParam']):('bye');
         $s   = '';
+        bird::session();
+        @header('X-Frame-Options: GOFORIT'); 
+        //unset(bird::$session['oauth']);
+        //bird::debug('debug:', var_export(bird::$session, true));
+
+
         if(($p=\Birds\bird::urlParam($cfg['url'])) && isset($cfg['idp'][$p[0]])) {
             try {
                 $cn = '\\Birds\\Oauth\\'.ucfirst($p[0]);
@@ -91,27 +97,44 @@ class User {
                     $me->graph();
                     $r=true;
                 }
-                unset($me, $cn, $d, $r);
+                unset($me, $cn, $d);
                 if(isset($r)) {
-                    bird::redirect((isset($_SERVER['HTTP_REFERER']) && substr($_SERVER['HTTP_REFERER'], 0, strlen($cfg['url']))!=$cfg['url'])?($_SERVER['HTTP_REFERER']):($cfg['url']));
+                    $req = App::request();
+                    $url = (substr($cfg['url'], 0, 1)=='/')?($req['host'].$cfg['url']):($cfg['url']);
+                    /*
+                    if(isset($_SERVER['HTTP_REFERER']) && substr($_SERVER['HTTP_REFERER'], 0, strlen($req['host']))==$req['host'] && substr($_SERVER['HTTP_REFERER'], 0, strlen($cfg['url']))!=$cfg['url']) {
+                        $url = $_SERVER['HTTP_REFERER'];
+                    }
+                    */
+                    unset($req);
+                    bird::redirect($url);
                 }
             } catch(Exception $e) {
                 bird::log(__METHOD__, $e->getMessage());
                 $s .= '<h1>Erro!!!</h1>'; // @todo: translate error message
             }
-
         }
 
         // @todo: template this!
+        $s = '<div id="app-single-sign-on">';
+        $end = bird::fullUrl($cfg['url']);
         foreach($cfg['idp'] as $p=>$d) {
-            $s .= '<p><a href="'.$cfg['url'].'/'.$p.'">'
-                . $p
-                . ((isset(bird::$session[$p]))?(' (desconectar)'):(''))
-                . '</a></p>';
+            if(isset(bird::$session[$p])) {
+                $s .= '<a class="app-button app-user-'.$p.'" href="'.bird::fullUrl($cfg['url'].'/'.$p.'/'.$bye).'" data-endpoint="'.$end.'">'
+                    . '<span class="app-user-network">'.$p.'</span> '
+                    . '<span class="app-user-name">'.bird::xml(bird::$session[$p]['name']).'</span> '
+                    . '<span class="app-user-sign-out">(Desconectar)</span>'
+                    . '</a>';
+            } else {
+                $s .= '<a class="app-button app-user-sign-in app-user-'.$p.'" href="'.bird::fullUrl($cfg['url'].'/'.$p).'" data-endpoint="'.$end.'">'.$p.'</a>';
+
+            }
             unset($p, $d);
         }
+        $s .= '</div>';
+        //bird::debug($s);
         
-        bird::log('debug:', var_export(\Birds\bird::$session, true));
+        bird::log('debug:', var_export(bird::$session, true));
         return $s;
     }
 

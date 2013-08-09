@@ -46,6 +46,8 @@ class Oauth {
         $tokenUrl,
         $requestTokenUrl,
         $graphUrl;
+    public static 
+        $sessionMap;
     
     /**
      * OAuth token/request builder: set the parameters
@@ -67,8 +69,46 @@ class Oauth {
     public function graph()
     {
         if(!isset(bird::$session[$this->prefix])) {
-            bird::$session[$this->prefix] = $this->makeRequest($this->graphUrl);
+            $cn = get_called_class();
+            $g = $this->makeRequest($this->graphUrl);
+            if($g &&  is_array($cn::$sessionMap)) {
+                $s = array();
+                foreach($cn::$sessionMap as $k=>$v) {
+                    if(is_array($v)) {
+                        foreach($v as $vk) {
+                            if(isset($g[$vk]) && $g[$vk]) {
+                                $s[$k]=$g[$vk];
+                                unset($vk);
+                                break;
+                            } else if(strpos($vk, '$')!==false) {
+                                $s[$k]=preg_replace('/\$([a-z0-9_]+)/ie', '$g[\'$1\']', $vk);
+                                unset($vk);
+                                break;
+                            }
+                            unset($vk);
+                        }
+                        if(!isset(bird::$session[$this->prefix][$k])) {
+                            $s[$k]=false;
+                        }
+                    } else if(isset($g[$v])) {
+                        $s[$k]=$g[$v];
+                    } else if(strpos($v, '$')!==false) {
+                        $s[$k]=preg_replace('/\$([a-z0-9_]+)/ie', '$g[\'$1\']', $v);
+                    }
+                    unset($k, $v);
+                }
+                $s['modified']=BIRD_TIME;
+                bird::$session[$this->prefix] = $s;
+            } else {
+                bird::log($g);
+                bird::$session[$this->prefix] = $g;
+            }
+            unset($g, $cn);
         }
+        if(!isset(bird::$session['oauth/'.$this->prefix])) {
+            bird::$session['oauth/'.$this->prefix] = bird::$session[$this->prefix]['id'];
+        }
+        //bird::debug(var_export(bird::$session, true), var_export(isset(bird::$session['oauth/'.$this->prefix]), true));
         return bird::$session[$this->prefix];
     }
     
@@ -94,15 +134,15 @@ class Oauth {
 
         // get the correct parameters from the response
         $params = $this->getParameters($response, $returnType);
-        bird::log(__METHOD__.', '.__LINE__, $params, $values);
 
         unset($parameters, $response);
         
         // add the token to the session
         if(isset($params[$values[0]]) && (!isset($values[1]) || isset($params[$values[1]]))) {
+            bird::$session[$this->prefix.'AppId'] = $this->appId;
             if(isset($this->requestTokenUrl) && strlen($this->requestTokenUrl) > 0){
                 $this->token = bird::$session[$this->prefix.'AccessToken'] = $params[$values[0]];
-                bird::$session[$this->prefix.'AccessTokenSecret'] = $params[$values[1]];
+                $this->tokenSecret = bird::$session[$this->prefix.'AccessTokenSecret'] = $params[$values[1]];
             } else {
                 bird::$session[$this->prefix.'AccessToken'] = $params[$values[0]];
                 if(isset($values[1])) {
@@ -134,16 +174,21 @@ class Oauth {
     public function makeRequest($url, $method = 'GET', Array $parameters = array(), $returnType = 'json', $includeCallback = false, $includeVerifier = false){
         // set oauth headers for oauth 1.0
         $ua = 'User-Agent: Birds/Oauth/'.BIRD_VERSION;
+        
         if(isset($this->requestTokenUrl) && strlen($this->requestTokenUrl) > 0){
             $headers = $this->getOauthHeaders($includeCallback);
             if($includeVerifier && isset($_GET['oauth_verifier'])){
                 $headers['oauth_verifier'] = $_GET['oauth_verifier'];
+                if(isset($_GET['oauth_token']) && !isset($parameters['oauth_token'])) {
+                    $parameters['oauth_token']=$_GET['oauth_token'];
+                }
             }
-            $base_info = $this->buildBaseString($url, $method, $headers);
+            $base_info = $this->buildBaseString($url, $method, array_merge($headers, $parameters));
             $composite_key = $this->getCompositeKey();
-            \Birds\bird::log($base_info, $composite_key);
+            bird::log($url, $base_info, $composite_key);
             $headers['oauth_signature'] = base64_encode(hash_hmac('sha1', $base_info, $composite_key, true));
             $header = array($this->buildAuthorizationHeader($headers), 'Expect:', $ua);
+            //bird::log($url, $base_info, $composite_key, $header, $headers);
         }
         // add access token to parameter list for oauth 2.0 requests
         else {
@@ -152,7 +197,7 @@ class Oauth {
                 $parameters['access_token'] = bird::$session[$this->prefix.'AccessToken'];
             }
         }
-        
+
         // create a querystring for GET requests
         if(count($parameters) > 0 && $method == 'GET' && strpos($url, '?') === false){
             $p = array();
@@ -171,7 +216,7 @@ class Oauth {
         );
         
         // set post fields for POST requests
-        bird::log(__METHOD__.', '.__LINE__.'--> '.$url, $header);
+        //bird::log(__METHOD__.', '.__LINE__.'--> '.$url, $header);
         if($method == 'POST'){
             $options[CURLOPT_POST] = true;
             $options[CURLOPT_POSTFIELDS] = http_build_query($parameters);
@@ -202,7 +247,6 @@ class Oauth {
             throw new Exception($response);
         }
         
-        bird::log(__METHOD__.', '.__LINE__);
         // return json decoded array or plain response
         if($returnType == 'json'){
             return json_decode($response, true);
@@ -213,21 +257,29 @@ class Oauth {
 
     public function resetSession()
     {
-        bird::log(__METHOD__.', '.__LINE__);
-        $l = strlen($this->prefix);
+        return self::resetSessionPrefix($this->prefix);
+    }
+
+    public static function resetSessionPrefix($p)
+    {
+        $l = strlen($p);
         foreach(bird::$session as $k=>$v) {
-            bird::log(__METHOD__.', '.__LINE__.': '.$k);
-            if(substr($k, 0, $l)==$this->prefix) {
+            if(substr($k, 0, $l)==$p) {
                 unset(bird::$session[$k]);
             }
             unset($k, $v);
+        }
+        if(isset(bird::$session['oauth'][$p])) {
+            if(count(bird::$session['oauth'])==1) unset(bird::$session['oauth']);
+            else unset(bird::$session['oauth/'.$p]);
         }
         unset($l);
     }
     
     public function validateAccessToken(){
         // check if current token has expired
-        if(isset(bird::$session[$this->prefix.'Expires']) && bird::$session[$this->prefix.'Expires'] < time()){
+        if((isset(bird::$session[$this->prefix.'Expires']) && bird::$session[$this->prefix.'Expires'] < time()) || (isset(bird::$session[$this->prefix.'AppId']) && bird::$session[$this->prefix.'AppId']!=$this->appId)) {
+            bird::log(__METHOD__.', '.__LINE__.': unauthorize app', bird::$session);
             $this->resetSession();
             $this->authorize($this->scope);
             return false;
@@ -260,7 +312,7 @@ class Oauth {
                         return false;
                     } else {
                         $this->requestAccessToken();
-                        unset(bird::$session[$this->prefix.'Token'], bird::$session[$this->prefix.'TokenSecret']);
+                        //unset(bird::$session[$this->prefix.'Token'], bird::$session[$this->prefix.'TokenSecret']);
                         return true;
                     }
                 }
@@ -348,7 +400,7 @@ class Oauth {
     
     private function getCompositeKey()
     {
-        bird::log(__METHOD__.', '.__LINE__);
+        bird::log(__METHOD__.', '.__LINE__, bird::$session[$this->prefix.'TokenSecret'], $this->tokenSecret);
         if(isset($this->tokenSecret) && strlen($this->tokenSecret) > 0){
             $composite_key = rawurlencode($this->appSecret) . '&' . rawurlencode($this->tokenSecret);
         } else if(isset(bird::$session[$this->prefix.'TokenSecret'])){
@@ -382,6 +434,12 @@ class Oauth {
     private function buildBaseString($baseURI, $method, $params)
     {
         $r = array();
+        if($p=strpos($baseURI, '?')) {
+            parse_str(substr($baseURI, $p+1), $a);
+            $params+=$a;
+            $baseURI = substr($baseURI, 0, $p);
+            unset($a, $p);
+        }
         ksort($params);
         foreach($params as $key => $value){
             $r[] = $key . '=' . rawurlencode($value);
