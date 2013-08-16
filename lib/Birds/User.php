@@ -120,13 +120,15 @@ class User {
         $end = bird::fullUrl($cfg['url']);
         foreach($cfg['idp'] as $p=>$d) {
             if(isset(bird::$session[$p])) {
-                $s .= '<a class="app-button app-user-'.$p.'" href="'.bird::fullUrl($cfg['url'].'/'.$p.'/'.$bye).'" data-endpoint="'.$end.'">'
+                $s .= '<a class="app-button app-user-signed-in app-user-'.$p.'" href="'.bird::fullUrl($cfg['url'].'/'.$p.'/'.$bye).'" data-endpoint="'.$end.'">'
                     . '<span class="app-user-network">'.$p.'</span> '
                     . '<span class="app-user-name">'.bird::xml(bird::$session[$p]['name']).'</span> '
                     . '<span class="app-user-sign-out">(Desconectar)</span>'
                     . '</a>';
             } else {
-                $s .= '<a class="app-button app-user-sign-in app-user-'.$p.'" href="'.bird::fullUrl($cfg['url'].'/'.$p).'" data-endpoint="'.$end.'">'.$p.'</a>';
+                $s .= '<a class="app-button app-user-sign-in app-user-'.$p.'" href="'.bird::fullUrl($cfg['url'].'/'.$p).'" data-endpoint="'.$end.'">'
+                    . '<span class="app-user-network">'.$p.'</span> '
+                    . '</a>';
 
             }
             unset($p, $d);
@@ -134,7 +136,7 @@ class User {
         $s .= '</div>';
         //bird::debug($s);
         
-        bird::log('debug:', var_export(bird::$session, true));
+        //bird::log('debug:', var_export(bird::$session, true));
         return $s;
     }
 

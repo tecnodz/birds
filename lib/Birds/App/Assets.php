@@ -341,7 +341,7 @@ class Assets
                 return false;
             }
         }
-        $expires = 3600 * 10;
+        $expires = 86400 * 10;
         if (isset($_GET['t']))
             $expires = 86400;
         $lastmod = filemtime($file);

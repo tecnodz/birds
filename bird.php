@@ -38,6 +38,7 @@ class bird
         $thousandSeparator='.',
         $timeout,
         $vars=array(),
+        $autoload=null,
         $session=null;
     protected static $_name, $_env='prod', $_site, $_server, $app, $scriptName, $scriptRealName, $urlParam;
 
@@ -284,7 +285,7 @@ class bird
             }
             self::$session = $u;
             Session::$id = $c;
-            setcookie($n, $c, (Session::$expires>2592000)?(Session::$expires):(time()+Session::$expires), '/', null, false, true);
+            setcookie($n, $c, (Session::$expires>2592000 || Session::$expires<=0)?(Session::$expires):(time()+Session::$expires), '/', null, false, true);
             unset($u, $c, $n);
         }
         return self::$session;
@@ -324,7 +325,7 @@ class bird
             self::$vars['cache-control'] = $set;
         } else if(!isset(\Birds\bird::$vars['cache-control'])) {
             if(!is_null($expires)) {
-                self::$vars['cache-control'] = 'public, must-revalidate';
+                self::$vars['cache-control'] = 'public';
             } else {
                 self::$vars['cache-control'] = 'private, must-revalidate';
             }
@@ -795,14 +796,14 @@ class bird
     /**
      * Class autoloader. Searches for classes under BIRD_ROOT./lib, BIRD_APP_ROOT./lib and self::$lib and 
      * 
-     * @param string $c class name to be loaded
-     * @param bool   $l if the class should be loaded
+     * @param string $cn class name to be loaded
+     * @param bool   $l  if the class should be loaded
      *
      * @return mixed file location or false if not found.
      */
-    public static function autoload($c, $l=true)
+    public static function autoload($cn, $l=true)
     {
-        $c = str_replace(array('_', '\\'), '/', $c);
+        $c = str_replace(array('_', '\\'), '/', $cn);
         if (!(file_exists($f=BIRD_ROOT."/lib/{$c}.php") || (strpos($c, '/')===false && file_exists($f=BIRD_ROOT."/lib/{$c}/{$c}.php")) || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.php") || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.class.php") || (strpos($c, '/')===false && file_exists($f=BIRD_APP_ROOT."/lib/{$c}/{$c}.php")))) {
             $f=false;
             foreach(self::$lib as $libi=>$dir) {
@@ -812,7 +813,24 @@ class bird
             }
         }
         if($f) {
-            if($l) @include_once $f;
+            if($l) {
+                @include_once $f;
+                if(is_null(self::$autoload)) {
+                    if((defined('BIRD_SITE_ROOT') && file_exists($c=BIRD_SITE_ROOT.'/config/autoload.ini')) || file_exists($c=BIRD_APP_ROOT.'/config/autoload.ini')) {
+                        self::$autoload = parse_ini_file($c, true);
+                    } else {
+                        self::$autoload = array();
+                    }
+                }
+                if(isset(self::$autoload[$cn])) {
+                    foreach(self::$autoload[$cn] as $k=>$v) {
+                        $cn::$$k = (!is_array($v) && $v[0]=='{')?(json_decode($v, true)):($v);
+                        //bird::log($cn.'::'.$k.'=', $cn::$$k, $v);
+                        unset($k, $v);
+                    }
+                    unset(self::$autoload[$cn]);
+                }
+            }
             return $f;
         } else {
             return false;
@@ -824,7 +842,6 @@ class bird
 namespace {
 
 class bird extends Birds\bird {};
-
 define('BIRD_VERSION', 0.1);
 if(!defined('BIRD_TIME')) {
 	define('BIRD_TIME', (isset($_SERVER['REQUEST_TIME_FLOAT']))?($_SERVER['REQUEST_TIME_FLOAT']):(microtime(true)));
@@ -857,5 +874,7 @@ if(BIRD_CLI && isset($_SERVER['argv'][0]) && substr(__FILE__, strlen($_SERVER['a
     $app->fly();
     unset($app);
 }
+bird::$lang=substr(setlocale(LC_CTYPE, 0),0,2);
+setlocale(LC_ALL,'en_US.UTF-8');
 
 }

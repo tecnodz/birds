@@ -47,6 +47,9 @@ class Layout
      */
     public function __construct($o=array())
     {
+        if(isset($o['formats']) && is_array($o['formats'])) {
+            $this->formats = $o['formats'];
+        }
         if(is_null($this->meta)) $this->meta=array();
         if(isset($o['meta']) && is_array($o['meta'])) {
             $this->addMeta($o['meta']);
@@ -77,7 +80,7 @@ class Layout
             $format = $this->formats[0];
             if(!$format) return false;
         }
-        if((($m='render'.ucfirst(\Birds\bird::camelize($format))) && method_exists($this, $m)) || (($m='render'.ucfirst(substr($format, 0, strpos($format, '/')))) && method_exists($this, $m))) {
+        if((($m='render'.ucfirst(\Birds\bird::camelize($format))) && $m!='render' && method_exists($this, $m)) || (($m='render'.ucfirst(substr($format, 0, strpos($format, '/')))) && $m!='render' && method_exists($this, $m))) {
             return $this->$m($format);
         } else {
             //\Birds\bird::log(__METHOD__.': method '.$m.' does not exist!');

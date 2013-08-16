@@ -114,7 +114,7 @@ class Route
 
     public function setFormat($format)
     {
-        if(in_array($format, $this->layout->formats)) {
+        if(in_array('*', $this->layout->formats) || in_array($format, $this->layout->formats)) {
             $this->format=$format;
             return true;
         } else {
@@ -206,7 +206,7 @@ class Route
             $r = \Birds\Yaml::read($f, 3600, array('language'=>\Birds\bird::$lang));
             if($r) {
                 if($ext && isset($r['formats']) && !in_array($ext, $r['formats']) && !in_array('*', $r['formats'])) $r=false;
-                else if($ext) $ext = '';
+                //else if($ext) $ext = '';
                 if($multiviews && (!isset($r['options']['multiviews']) || $r['options']['multiviews']==false)) $r=false;
                 else if(BIRD_CLI && (!isset($r['options']['shell']) || $r['options']['shell']==false)) $r=false;
                 else if(!BIRD_CLI && ((isset($r['options']['http']) && $r['options']['http']==false) || (isset($r['options']['shell']) && $r['options']['shell']==true))) $r=false;
