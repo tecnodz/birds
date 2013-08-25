@@ -25,7 +25,7 @@
  */
 namespace Birds;
 class Session implements \ArrayAccess {
-    public static $name, $id, $expires=3600;
+    public static $name, $id, $expires=0;
 
     public function __toString()
     {

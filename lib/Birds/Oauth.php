@@ -100,7 +100,6 @@ class Oauth {
                 $s['modified']=BIRD_TIME;
                 bird::$session[$this->prefix] = $s;
             } else {
-                bird::log($g);
                 bird::$session[$this->prefix] = $g;
             }
             unset($g, $cn);
@@ -185,7 +184,6 @@ class Oauth {
             }
             $base_info = $this->buildBaseString($url, $method, array_merge($headers, $parameters));
             $composite_key = $this->getCompositeKey();
-            bird::log($url, $base_info, $composite_key);
             $headers['oauth_signature'] = base64_encode(hash_hmac('sha1', $base_info, $composite_key, true));
             $header = array($this->buildAuthorizationHeader($headers), 'Expect:', $ua);
             //bird::log($url, $base_info, $composite_key, $header, $headers);
@@ -221,7 +219,6 @@ class Oauth {
             $options[CURLOPT_POST] = true;
             $options[CURLOPT_POSTFIELDS] = http_build_query($parameters);
             $header[]='Content-Type: application/x-www-form-urlencoded';
-            bird::log('POST:', $parameters);
         }
 
         // set CURL headers for oauth 1.0 requests
@@ -238,7 +235,6 @@ class Oauth {
         $response = curl_exec($curl);
         $info = curl_getinfo($curl);
         curl_close($curl);
-        bird::log($info, $response);
         
         // show error when http_code is not 200
         if($info['http_code'] != 200){
@@ -279,7 +275,6 @@ class Oauth {
     public function validateAccessToken(){
         // check if current token has expired
         if((isset(bird::$session[$this->prefix.'Expires']) && bird::$session[$this->prefix.'Expires'] < time()) || (isset(bird::$session[$this->prefix.'AppId']) && bird::$session[$this->prefix.'AppId']!=$this->appId)) {
-            bird::log(__METHOD__.', '.__LINE__.': unauthorize app', bird::$session);
             $this->resetSession();
             $this->authorize($this->scope);
             return false;
@@ -341,7 +336,6 @@ class Oauth {
     
     protected function requestToken($returnType = 'flat', Array $values = array('oauth_token', 'oauth_token_secret'))
     {
-        bird::log(__METHOD__.', '.__LINE__);
         // make the request
         $response = $this->makeRequest($this->requestTokenUrl, 'POST', array(), $returnType, true);
         
@@ -364,7 +358,6 @@ class Oauth {
     
     protected function authorize(Array $scope = array(), $scope_seperator = ',', $attach = null)
     {
-        bird::log(__METHOD__.', '.__LINE__);
         $this->authUrl .= (strpos($this->authUrl, '?'))?('&'):('?');
         // build authorize url for oauth 1.0 requests
         if(isset($this->requestTokenUrl) && strlen($this->requestTokenUrl) > 0){
@@ -378,7 +371,6 @@ class Oauth {
             $this->authUrl .= '&state=' . $state . '&scope=' . implode($scope_seperator, $scope) . $attach;
         }
         // redirect
-        \Birds\bird::log(__METHOD__, '    '.$this->authUrl);
         header('Location: ' . $this->authUrl);
         bird::end();
     }
@@ -400,7 +392,6 @@ class Oauth {
     
     private function getCompositeKey()
     {
-        bird::log(__METHOD__.', '.__LINE__, bird::$session[$this->prefix.'TokenSecret'], $this->tokenSecret);
         if(isset($this->tokenSecret) && strlen($this->tokenSecret) > 0){
             $composite_key = rawurlencode($this->appSecret) . '&' . rawurlencode($this->tokenSecret);
         } else if(isset(bird::$session[$this->prefix.'TokenSecret'])){

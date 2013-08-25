@@ -122,10 +122,10 @@ class bird
             } else {
                 self::$_site = '';
             }
-            if (!defined('BIRD_SITE_ROOT')) {
-                define('BIRD_SITE_ROOT', (is_dir(BIRD_APP_ROOT.'/sites/'.self::$_site))?(BIRD_APP_ROOT.'/sites/'.self::$_site):(BIRD_APP_ROOT));
-            }
             unset($host, $site, $p);
+        }
+        if (!defined('BIRD_SITE_ROOT')) {
+            define('BIRD_SITE_ROOT', (is_dir(BIRD_APP_ROOT.'/sites/'.self::$_site))?(BIRD_APP_ROOT.'/sites/'.self::$_site):(BIRD_APP_ROOT));
         }
         return self::$_site;
     }
@@ -277,10 +277,10 @@ class bird
                 if($u=\Birds\Cache::get('session/'.$c)) {
                     break;
                 }
-                unset($u, $c);
+                unset($u);
             }
             if(!isset($u)) {
-                $c = uniqid();
+                if(!isset($c)) $c = uniqid();
                 $u = new \Birds\Session();
             }
             self::$session = $u;
@@ -803,11 +803,11 @@ class bird
      */
     public static function autoload($cn, $l=true)
     {
+        $f=false;
         $c = str_replace(array('_', '\\'), '/', $cn);
         if (!(file_exists($f=BIRD_ROOT."/lib/{$c}.php") || (strpos($c, '/')===false && file_exists($f=BIRD_ROOT."/lib/{$c}/{$c}.php")) || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.php") || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.class.php") || (strpos($c, '/')===false && file_exists($f=BIRD_APP_ROOT."/lib/{$c}/{$c}.php")))) {
-            $f=false;
             foreach(self::$lib as $libi=>$dir) {
-                if(substr($dir, -1)=='/') tdz::$lib[$libi]=substr($dir, 0, strlen($dir)-1);
+                if(substr($dir, -1)=='/') self::$lib[$libi]=substr($dir, 0, strlen($dir)-1);
                 if(!(file_exists($f=$dir.'/'.$c.'.php') || file_exists($f=$dir.'/'.$c.'.class.php'))) $f=false;
                 unset($libi,$dir);
             }
@@ -815,25 +815,36 @@ class bird
         if($f) {
             if($l) {
                 @include_once $f;
-                if(is_null(self::$autoload)) {
-                    if((defined('BIRD_SITE_ROOT') && file_exists($c=BIRD_SITE_ROOT.'/config/autoload.ini')) || file_exists($c=BIRD_APP_ROOT.'/config/autoload.ini')) {
-                        self::$autoload = parse_ini_file($c, true);
-                    } else {
-                        self::$autoload = array();
-                    }
-                }
-                if(isset(self::$autoload[$cn])) {
-                    foreach(self::$autoload[$cn] as $k=>$v) {
-                        $cn::$$k = (!is_array($v) && $v[0]=='{')?(json_decode($v, true)):($v);
-                        //bird::log($cn.'::'.$k.'=', $cn::$$k, $v);
-                        unset($k, $v);
-                    }
-                    unset(self::$autoload[$cn]);
-                }
+                self::autoloadParams($cn);
             }
             return $f;
         } else {
             return false;
+        }
+    }
+
+    public static function autoloadParams($cn)
+    {
+        if(is_null(self::$autoload)) {
+            if(file_exists($c=BIRD_APP_ROOT.'/config/autoload.ini')) {
+                self::$autoload = parse_ini_file($c, true);
+            } else {
+                self::$autoload = array();
+            }
+        }
+        if(defined('BIRD_SITE_ROOT') && !isset(self::$autoload['_site'])) {
+            if(file_exists($c=BIRD_SITE_ROOT.'/config/autoload.ini')) {
+                self::$autoload += parse_ini_file($c, true);
+            }
+            self::$autoload['_site']=true;
+        }
+        if(isset(self::$autoload[$cn])) {
+            foreach(self::$autoload[$cn] as $k=>$v) {
+                $cn::$$k = (!is_array($v) && $v[0]=='{')?(json_decode($v, true)):($v);
+                //bird::log($cn.'::'.$k.'=', $cn::$$k, $v);
+                unset($k, $v);
+            }
+            unset(self::$autoload[$cn]);
         }
     }
 }

@@ -1,0 +1,27 @@
+# en
+---
+language: en
+meta:
+  header:
+    - "HTTP/1.1 403 Forbidden"
+    - "Status: 403 Forbidden"
+  title: "You shall not pass!"
+  "@language": en
+content:
+  body:
+    - "<h1>You shall not pass!</h1><p>Looks like you're lacking privileges to preview this page.</p>"
+...
+
+# pt
+---
+language: pt
+meta:
+  header:
+    - "HTTP/1.1 403 Forbidden"
+    - "Status: 403 Forbidden"
+  title: "Espere aí!"
+  "@language": pt
+content:
+  body:
+    - "<h1>Espere aí</h1><p>Parece que você não possui privilegios para acessar esta página.</p>"
+...

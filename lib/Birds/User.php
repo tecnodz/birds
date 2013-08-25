@@ -41,6 +41,12 @@
 namespace Birds;
 class User {
 
+    public static function id()
+    {
+        bird::session();
+        return (isset(bird::$session['uid']))?(bird::$session['uid']):(false);
+    }
+
     /**
      * SingleSignOnComponent
      * 
@@ -84,6 +90,7 @@ class User {
                 if(!isset($d['callback'])) {
                     $d['callback']=$cfg['url'].'/'.$p[0];
                 }
+                bird::$session['trying']=$p[0];
 
                 $me = new $cn($d['appId'], $d['appSecret'], bird::fullUrl($d['callback']));
                 if(isset($d['persistent']) && $d['persistent']) {
