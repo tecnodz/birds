@@ -1,0 +1,9 @@
+---
+options:
+  shell: true
+formats: [ text/plain ]
+content:
+  body:
+    -
+      class: Birds\Installer
+      method: install

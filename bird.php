@@ -111,7 +111,9 @@ class bird
             } else {
                 $host='localhost';
             }
-
+            if($p=strpos($host, ':')) {
+                $host = substr($host, 0, $p);
+            }
             if(file_exists(BIRD_APP_ROOT.'/config/sites/'.$host.'.txt')
                 || (($p=strpos($host, '.'))!==false && file_exists(BIRD_APP_ROOT.'/config/sites/'.($host=substr($host,$p+1)).'.txt'))
             ) {
@@ -880,12 +882,12 @@ if (!defined('BIRD_VAR')) {
     define('BIRD_VAR', BIRD_APP_ROOT.'/data');
 }
 spl_autoload_register('\Birds\bird::autoload');
-if(BIRD_CLI && isset($_SERVER['argv'][0]) && substr(__FILE__, strlen($_SERVER['argv'][0])*-1)==$_SERVER['argv'][0]) {
+bird::$lang=substr(setlocale(LC_CTYPE, 0),0,2);
+setlocale(LC_ALL,'en_US.UTF-8');
+if(realpath($_SERVER['SCRIPT_FILENAME'])==__FILE__) {
     $app = bird::app();
     $app->fly();
     unset($app);
 }
-bird::$lang=substr(setlocale(LC_CTYPE, 0),0,2);
-setlocale(LC_ALL,'en_US.UTF-8');
 
 }

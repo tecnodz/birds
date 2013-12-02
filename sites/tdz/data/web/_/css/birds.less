@@ -1,0 +1,220 @@
+@import "lib.less";
+
+/* force a vertical scrollbar to prevent a jumpy page */
+html {overflow-y: scroll;}
+
+/* we use a lot of ULs that aren't bulleted.
+don't forget to restore the bullets within content. */
+ul {list-style: none;}
+#body ul{list-style-image:url(/_/img/li.png);padding:0 0 8px 16px;}
+#body ul ul{list-style-image:url(/_/img/li2.png);padding:8px 0 0 16px;}
+#body ul ul ul{list-style-image:url(/_/img/li3.png);}
+#body li{margin:0 0 8px 0;}
+
+#body ol{list-style:roman;padding:0 0 8px 16px;}
+#body ol ol, #body ul ol{padding:8px 0 0 16px;}
+
+blockquote, q {quotes: none;}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {content: ''; content: none;}
+
+a {margin: 0; padding: 0; font-size: 100%; vertical-align: baseline; background: transparent;}
+
+del {text-decoration: line-through;}
+
+abbr[title], dfn[title] {border-bottom: 1px dotted #000; cursor: help;}
+
+/* tables still need cellspacing="0" in the markup */
+table {border-collapse: collapse; border-spacing: 0;}
+th {font-weight: bold; vertical-align: top;text-align:left}
+td {font-weight: normal; vertical-align: top;}
+
+hr {display: block; height: 1px; border: 0; border-top: 1px solid #ccc; margin: 1em 0; padding: 0;}
+
+input, select {vertical-align: middle;}
+
+pre {
+white-space: pre; /* CSS2 */
+white-space: pre-wrap; /* CSS 2.1 */
+white-space: pre-line; /* CSS 3 (and 2.1 as well, actually) */
+word-wrap: break-word; /* IE */
+}
+
+input[type="radio"] {vertical-align: text-bottom;}
+input[type="checkbox"] {vertical-align: bottom; *vertical-align: baseline;}
+.ie6 input {vertical-align: text-bottom;}
+
+select, input, textarea {font: 99% sans-serif;}
+
+table {font-size: inherit; font: 100%;}
+ 
+/* Accessible focus treatment
+people.opera.com/patrickl/experiments/keyboard/test */
+a:hover, a:active {outline: none;}
+
+small {font-size: 85%;}
+
+strong, th {font-weight: bold;}
+
+td, td img {vertical-align: top;}
+
+/* Make sure sup and sub don't screw with your line-heights
+gist.github.com/413930 */
+sub, sup {font-size: 75%; line-height: 0; position: relative;}
+sup {top: -0.5em;}
+sub {bottom: -0.25em;}
+
+/* standardize any monospaced elements */
+pre, code, kbd, samp {font-family: monospace, sans-serif;}
+
+/* hand cursor on clickable elements */
+.clickable,
+label,
+input[type=button],
+input[type=submit],
+button {cursor: pointer;}
+
+/* Webkit browsers add a 2px margin outside the chrome of form elements */
+button, input, select, textarea {margin: 0;}
+
+/* make buttons play nice in IE */
+button {width: auto; overflow: visible;}
+ 
+/* scale images in IE7 more attractively */
+.ie7 img {-ms-interpolation-mode: bicubic;}
+
+/* prevent BG image flicker upon hover */
+.ie6 html {filter: expression(document.execCommand("BackgroundImageCache", false, true));}
+
+/* let's clear some floats */
+.clearfix:before, .clearfix:after { content: "\0020"; display: block; height: 0; overflow: hidden; }
+.clearfix:after { clear: both; }
+.clearfix { zoom: 1; }
+
+
+
+/* Ok, this is where the fun starts.
+-------------------------------------------------------------------------------*/
+/*
+magenta: ff0099
+ciano: 00ccff
+verde: ccff00
+*/
+html{background:#ffffff}
+body {font: 15px/20px 'Open Sans', sans-serif;font-weight:400;display:block;min-width:768px;max-width:1152px;margin:0 auto;min-height:480px;position:relative;}
+h1{font-size:2em;line-height:30px;padding-top:9px;padding-bottom:12px;margin:0;font-weight:300;color:#888888;margin-top:18px;}
+h2{font-size:2em;line-height:30px;font-weight:300;color:#00ccff;margin:20px 0 10px 0}
+h3{margin:4px 0;font-size:1.1em;line-height:20px;font-weight:600;color:#888888}
+p{margin:0 0 16px 0;}
+#ui table{width:100%;}
+thead th{padding:4px;background:#666666;color:#ffffff;}
+tbody td{background:#f0f0f0;padding:4px;}
+tbody tr:nth-child(even) td{background:#f6f6f6;}
+tbody tr:hover td{background:#e0e0e0;}
+tbody tr:hover:nth-child(even) td{background:#e6e6e6;}
+body, select, input, textarea {color: #333;}
+
+a {color: #cccc00;text-decoration:none;}
+a:visited {color: #663399;text-decoration:none}
+a:hover {color: #99eeff;text-decoration:underline}
+
+html.magenta strong, html.ciano strong{color:#00ccff;}
+
+h1 a, h2 a, h3 a{color:#ccff00 !important}
+
+/* Custom text-selection colors (remove any text shadows: twitter.com/miketaylr/status/12228805301) */
+::-moz-selection{background: #fcd700; color: #fff; text-shadow: none;}
+::selection {background: #fcd700; color: #fff; text-shadow: none;}
+
+/* j.mp/webkit-tap-highlight-color */
+a:link {-webkit-tap-highlight-color: #fcd700;}
+
+ins {background-color: #fcd700; color: #000; text-decoration: none;}
+mark {background-color: #fcd700; color: #000; font-style: italic; font-weight: bold;}
+
+#header{display:block;position:absolute;left:0;top:0;width:300px;z-index:3;}
+#header .container{padding:48px 0 0 0;}
+
+#body{display:block;margin:75px 0 150px 300px;}
+#footer{position:fixed;bottom:0;left:0;width:100%;background-color:#00ccff;background:rgba(0,204,255,.95);color:#ffffff;height:100px;}
+#footer .container{min-width:768px;max-width:1152px;margin:0 auto;}
+#footer a{color:#006699;}
+#logo{position:fixed;top:80px;width:300px;text-align:center;}
+.contato{position:relative;top:20px;color:#ffffff;margin-left:290px;}
+.contato p{margin:0}
+.contato p:nth-child(n+1){text-indent:8px;padding-left:-8px;}
+.sombra{-moz-box-shadow: -5px 3px 5px #999999;-webkit-box-shadow: -5px 3px 5px #999999;box-shadow: -5px 3px 5px #999999;filter: progid:DXImageTransform.Microsoft.Shadow(Color=#999999, Direction=45, Strength=3);-ms-filter: 'progid:DXImageTransform.Microsoft.Shadow(Color=#999999, Direction=45, Strength=3)';}
+
+.circle(@r) {
+	@rpx: ~"@{r}px";
+	@rt: 62 - (@r * 0.5);
+	@rm: (@r * 0.5);
+	@ra: 90 - ((@r * -90)/25);
+	@rs: (@r * 5)/25;
+    .border(@rpx);width:@rpx;height:@rpx;
+    position:absolute;left:212px;top:~"@{rt}px";z-index:5;
+    .transform-origin(~"-62px @{rm}px");
+    .rotate(~"@{ra}deg");
+    .animation(~"rotate @{rs}s infinite linear");
+}
+.circle{display:inline-block;border:4px solid #00ccff;}
+.circle.logo{position:static;overflow:hidden;.border(124px);border-color:#2e434d !important;border-width:0px;background:#00ccff;height:124px;width:124px}
+.circle.center{position:absolute;.border(120px);left:87px;top:-1px;border-color:#2e434d !important;border-width:3px;background:none;height:120px;width:120px}
+.circle.big{.circle(75);}
+.circle.medium{.circle(50);}
+.circle.small{.circle(25);}
+.circle.bigger{.circle(100);}
+.keyframes("rotate", rotate(0deg), rotate(360deg));
+
+
+.heading h2{margin:10px 0 5px 0;}
+.heading > .box{background:#eee;background:rgba(0,0,0,.05);color:#444;padding:10px 10px 1px 10px;}
+p.date{color:#002244;text-decoration:none;border:none;}
+.social{background:#000000;background:rgba(0,0,0,.5);width:100%;margin:0 -10px 0 -10px;padding:10px;}
+.fb-like{display:inline;display:inline-block;margin-top:2px}
+
+
+@media screen {
+/* transitions */
+html,h2,.circle{.transition(~"background 0.5s ease-out, color 0.5s ease-out, border 0.5s ease-out");}
+.heading > .box,.heading > .box p{.transition(~"all 0.5s ease-out");}
+html.magenta{background:#ff0099;color:#ffffff}
+html.magenta .heading .box{background:#eee;background:rgba(0,0,0,.1);color:#fff;}
+html.magenta h2{color:#fff}
+html.magenta .circle{border-color:#ccff00}
+html.magenta .circle.logo{border-color:#2e434d;background:#ccff00;}
+
+html.limao{background:#ccff00;color:#444444}
+/*
+html.limao .heading .box{}
+html.limao h2{}
+*/
+html.limao h2{color:#2e434d;color:#ff0099}
+html.limao .circle{border-color:#ff0099}
+html.limao .circle.logo{border-color:#2e434d;background:#ff0099;}
+
+html.chumbo{background:#2e434d;color:#fff}
+html.chumbo .heading .box{background:#444;background:rgba(255,255,255,.1);color:#fff;}
+html.chumbo h2{}
+html.chumbo .circle{border-color:#ccff00}
+html.chumbo .circle.logo{border-color:#2e434d;background:#ccff00;}
+}
+
+@media screen and (min-width: 769px) {
+	.heading > .box.inactive{height:0;margin:0;padding:0;overflow:hidden;opacity:0}
+	.heading > .box.inactive p{margin:0;padding:0;line-height:0;opacity:0}
+}
+
+@media screen and (max-width: 768px) {
+	body,#footer .container{min-width:300px;}
+	#body{margin:10px 0 50px 0;}
+	#header{position:relative;width:100%;height:100px;overflow:hidden;background:#2e434d;}
+	#logo{position:relative;left:-89px;top:0;}
+	#footer{height:50px}
+	.contato{position:relative;top:0px;margin:5px 10px 0 0}
+	.contato p:first-child{position:absolute;right:0;text-align:right}
+	html.chumbo{background:#162428;color:#fff}
+}

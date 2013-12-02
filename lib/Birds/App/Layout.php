@@ -185,6 +185,7 @@ class Layout
         $slots = (is_array($this->slots))?($this->slots):(array_keys($this->content));
         foreach($slots as $slot) {
             if(isset($content[$slot])) {
+                $id=$slot;
                 if(in_array($slot, $this->bodyElements)) {
                     $tags=array((isset($this->openTags[$slot]))?($this->openTags[$slot]):('<'.$slot.'>'), (isset($this->closeTags[$slot]))?($this->closeTags[$slot]):('</'.$slot.'>'));
                 } else if($slot=='body') {
@@ -197,22 +198,23 @@ class Layout
                         unset($el);
                         if(isset($m[2])) $tags[0] .= ' id="'.substr($m[2],1).'"';
                         if(isset($m[3])) $tags[0] .= ' class="'.trim(str_replace('.', ' ', $m[3])).'"';
+                        unset($m, $id);
                     } else {
                         $tags=array('<div id="'.$slot.'">', '</div>');
                     }
                 }
-                if($tags[0]) \Birds\App::output($tags[0]);
+                \Birds\App::output('<div'.((isset($id))?(' id="'.\bird::xml($id).'"'):('')).' data-slot="'.\bird::xml($slot).'">'.$tags[0]);
                 // render content
                 foreach($content[$slot] as $i=>$c) {
                     \Birds\App::output($c->render('text/html'));
                     unset($c, $content[$slot][$i], $i);
                 }
-
-
-                if($tags[1]) \Birds\App::output($tags[1]);
+                unset($content[$slot], $id);
+                \Birds\App::output($tags[1].'</div>');
             }
             unset($slot, $tags);
         }
+        unset($content);
 
         \Birds\App::output(((isset($js))?($js):(''))
             . ((isset($this->closeTags['body']))?($this->closeTags['body']):('</body>'))

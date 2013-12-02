@@ -1,7 +1,8 @@
 ---
 meta:
-  title: TI + Design = Tecnodesign
+  title: Tecnodesign = Design + TI
   "@language": pt
+  script: [ /_/js/jquery.js, /_/js/tdz.js ]
 content:
   body:
     - home

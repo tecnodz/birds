@@ -53,6 +53,7 @@ class Content
      */
     public function render($format='text/html')
     {
+        $wrap=array('', '');
         if(is_null($this->content)) {
             try {
                 if($this->class) {
@@ -86,11 +87,15 @@ class Content
                     } else if(file_exists($c=$contentDir.'/'.$this->uid) || ($ext && file_exists($c=$contentDir.'/'.$this->uid.'.'.$ext))) {
                         $found=true;
                     }
+                    if($format=='text/html') {
+                        $wrap[0]='<div data-content="'.\bird::xml($this->uid).'">';
+                        $wrap[1]='</div>';
+                    }
                     if(!$found) {
                         $this->content=false;
                     } else {
-                        return file_get_contents($c); // output directly?
-                        //$this->content=file_get_contents($c); // output directly?
+                        // return file_get_contents($c); // output directly?
+                        $this->content=file_get_contents($c);
                     }
                     unset($found, $contentDir, $c, $ext);
                 }
@@ -99,7 +104,7 @@ class Content
                 $this->content=false;
             }
         }
-        return $this->content;
+        return $wrap[0].$this->content.$wrap[1];
     }
 
 

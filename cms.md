@@ -77,3 +77,12 @@ websites.
 
     +   When a route is found, it must match the formats (if available). If the route addresses a parent folder/file, 
         it must also have the "options: { multiviews: true }" set.
+
+
+## User Interfaces ##
+
+*   Installer
+*   Create site/site manager
+*   Create page/page manager
+*   Create content/content manager
+*   Publish/version control

@@ -122,6 +122,7 @@ class App
     
 	public function fly($format=null)
 	{
+        ob_clean();
         self::$running = true;
         if(!isset($this->config['Birds']['routes-dir'])) {
             bird::log('Don\t know where to go -- please set Birds->routes-dir');
@@ -270,6 +271,22 @@ class App
     }
 
     /**
+     * Input handler: unreliable
+     */
+    public static function input()
+    {
+        exec("stty -icanon min 0 time 0");
+        $stdin = fopen('php://stdin', 'r');
+        $s = '';
+        while(!$s) {
+            $s = fgets($stdin);
+        }
+        fclose($stdin);
+        unset($stdin);
+        return $s;
+    }
+
+    /**
      * Output handler: this should manage if the output should be buffered or not.
      */
     public static function output($s)
@@ -330,16 +347,14 @@ class App
         $name = bird::name();
         list($server, $domain) = explode('.', bird::serverName(), 2);
         $cfg=array(BIRD_ROOT.'/config/bird.yml');
-        if(BIRD_APP_ROOT!=BIRD_ROOT) {
-            if($name!='bird' && file_exists($f=BIRD_APP_ROOT.'/config/bird.yml')) {
-                $cfg[]=$f;
-            }
-            if(file_exists($f=BIRD_APP_ROOT.'/config/'.$name.'@'.$server.'.yml')) {
-                $cfg[]=$f;
-            }
-            if(file_exists($f=BIRD_APP_ROOT.'/config/'.$name.'.yml')) {
-                $cfg[]=$f;
-            }
+        if(BIRD_APP_ROOT!=BIRD_ROOT && $name!='bird' && file_exists($f=BIRD_APP_ROOT.'/config/bird.yml')) {
+            $cfg[]=$f;
+        }
+        if(file_exists($f=BIRD_APP_ROOT.'/config/'.$name.'@'.$server.'.yml')) {
+            $cfg[]=$f;
+        }
+        if(file_exists($f=BIRD_APP_ROOT.'/config/'.$name.'.yml')) {
+            $cfg[]=$f;
         }
         if(defined('BIRD_SITE_ROOT') && BIRD_SITE_ROOT!=BIRD_APP_ROOT) {
             if(file_exists($f=BIRD_SITE_ROOT.'/config/'.$name.'@'.$server.'.yml')) {

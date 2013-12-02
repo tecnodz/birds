@@ -1,2 +1,6 @@
 log/*
 data/cache/*
+data/web/_/*.js
+data/web/_/*.css
+data/web/_/css/*.less.css
+sites/tdz/data/web/_/css/*.less.css

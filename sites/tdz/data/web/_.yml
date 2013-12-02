@@ -1,0 +1,9 @@
+---
+options:
+  multiviews: true
+formats: [ text/plain, * ]
+layout: assets.yml
+content:
+  body:
+    -
+      class: Birds\App\Assets
