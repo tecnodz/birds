@@ -312,8 +312,6 @@ class Assets
                 unset($fname, $i);
             }
             if(rename($tmp, $fn)) {
-                unlink($tmp);
-            } else {
                 chmod($fn, 0666);
             }
         }
