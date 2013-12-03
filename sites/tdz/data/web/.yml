@@ -1,9 +1,20 @@
 ---
+language: pt
 meta:
-  title: Tecnodesign = Design + TI
+  title: "Tecnodesign = Design + TI"
   "@language": pt
-  script: [ /_/js/jquery.js, /_/js/tdz.js ]
+  script: [ "/_/js/jquery.js", "/_/js/tdz.js" ]
 content:
   body:
-    - home
+    - pt/home
+...
+---
+language: en
+meta:
+  title: "Tecnodesign = Design + IT"
+  "@language": en
+  script: [ "/_/js/jquery.js", "/_/js/tdz.js" ]
+content:
+  body:
+    - en/home
 ...

@@ -115,7 +115,7 @@ tbody td{background:#f0f0f0;padding:4px;}
 tbody tr:nth-child(even) td{background:#f6f6f6;}
 tbody tr:hover td{background:#e0e0e0;}
 tbody tr:hover:nth-child(even) td{background:#e6e6e6;}
-body, select, input, textarea {color: #333;}
+html, select, input, textarea {color: #333;}
 
 a {color: #cccc00;text-decoration:none;}
 a:visited {color: #663399;text-decoration:none}
@@ -176,6 +176,9 @@ p.date{color:#002244;text-decoration:none;border:none;}
 .social{background:#000000;background:rgba(0,0,0,.5);width:100%;margin:0 -10px 0 -10px;padding:10px;}
 .fb-like{display:inline;display:inline-block;margin-top:2px}
 
+.lighter{opacity:0.5}
+.smaller{font-size:0.8em;}
+.bigger{font-size:1.25em;}
 
 @media screen {
 /* transitions */
@@ -204,8 +207,10 @@ html.chumbo .circle.logo{border-color:#2e434d;background:#ccff00;}
 }
 
 @media screen and (min-width: 769px) {
+	.heading h2{cursor:pointer}
 	.heading > .box.inactive{height:0;margin:0;padding:0;overflow:hidden;opacity:0}
 	.heading > .box.inactive p{margin:0;padding:0;line-height:0;opacity:0}
+	.mobile{display:none}
 }
 
 @media screen and (max-width: 768px) {
@@ -217,4 +222,5 @@ html.chumbo .circle.logo{border-color:#2e434d;background:#ccff00;}
 	.contato{position:relative;top:0px;margin:5px 10px 0 0}
 	.contato p:first-child{position:absolute;right:0;text-align:right}
 	html.chumbo{background:#162428;color:#fff}
+	.desktop{display:none}
 }

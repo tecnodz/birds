@@ -54,7 +54,7 @@ class Yaml
     {
         if(!is_string($s) || !file_exists($s) || filesize($s)<2) return false;
         $readTimeout = filemtime($s);
-        $ckey = 'yaml/'.(($cn)?($cn.'-'):('')).md5($s.((is_array($filter))?(':'.serialize($filter)):('')));
+        $ckey = 'yaml/'.(($cn)?(str_replace('\\', '_', $cn).'-'):('')).md5($s.((is_array($filter))?(':'.serialize($filter)):('')));
         $a = Cache::get($ckey, $readTimeout);
         if ($a) {
             unset($readTimeout, $ckey);

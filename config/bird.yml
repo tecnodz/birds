@@ -4,7 +4,7 @@ all:
     apps-dir: .
     document-root: ../htdocs
     languages: "[ en, pt ]"
-    language: pt
+    language: ~
     routes-dir:  "$BIRD_SITE_ROOT/data/web:$BIRD_APP_ROOT/data/web:$BIRD_ROOT/data/web"
     content-dir: "$BIRD_SITE_ROOT/data/content:$BIRD_APP_ROOT/data/content:$BIRD_ROOT/data/content"
     layout-dir:  "$BIRD_SITE_ROOT/data/layout:$BIRD_APP_ROOT/data/layout:$BIRD_ROOT/data/layout"

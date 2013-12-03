@@ -133,9 +133,8 @@ class App
         if(isset($this->config['Birds']['response'])) {
             self::$response += $this->config['Birds']['response'];
         }
-        if(isset($this->config['Birds']['language'])) bird::$lang=$this->config['Birds']['language'];
+        if(isset($this->config['Birds']['language']) && $this->config['Birds']['language']) bird::$lang=$this->config['Birds']['language'];
         else if(isset($this->config['Birds']['languages'])) bird::$lang=self::language($this->config['Birds']['languages']);
-
         //set_error_handler(array('bird', 'log'));
 
         self::$request=null;
@@ -388,7 +387,7 @@ class App
         if(!isset($lang)) {
             $lang = bird::$lang;
         }
-        return bird::$lang;
+        return $lang;
     }
 
     /**

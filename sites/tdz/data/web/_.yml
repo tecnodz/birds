@@ -1,7 +1,7 @@
 ---
 options:
   multiviews: true
-formats: [ text/plain, * ]
+formats: [ text/plain, "*" ]
 layout: assets.yml
 content:
   body:

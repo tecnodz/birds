@@ -390,7 +390,8 @@ class Cache
         if(self::$serialize) {
             $value = serialize($value);
         }
-        $ret = bird::save(self::filename($key), ((int) $timeout)."\n".$value, true);
+        if($timeout && $timeout<2592000) $timeout = BIRD_TIME+(float)$timeout;
+        $ret = bird::save(self::filename($key), ((float) $timeout)."\n".$value, true);
         unset($key,$value,$timeout);
         return $ret;
     }

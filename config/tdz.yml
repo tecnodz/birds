@@ -3,5 +3,5 @@ all:
   Birds:
     apps-dir: .
     document-root: ../htdocs
-    languages: "[ pt ]"
-    language: pt
+    languages: [ pt, en ]
+    language: ~ 
