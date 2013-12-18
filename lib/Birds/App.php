@@ -122,7 +122,7 @@ class App
     
 	public function fly($format=null)
 	{
-        ob_clean();
+        @ob_clean();
         self::$running = true;
         if(!isset($this->config['Birds']['routes-dir'])) {
             bird::log('Don\t know where to go -- please set Birds->routes-dir');

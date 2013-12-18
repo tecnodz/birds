@@ -33,6 +33,7 @@ class Installer
     protected static $root=BIRD_ROOT, $apps=BIRD_APP_ROOT, $site='';
     public static function install()
     {
+        self::gitUpdate();
         $r = App::request();
         $o=array(
             'apps-dir'=>false,
@@ -59,21 +60,33 @@ class Installer
                 }
             }
         }
+        $installed=false;
         try {
             if($o['apps-dir']) {
+                $installed=true;
                 self::installApps($o['apps-dir']);
             }
             if($o['site']) {
+                $installed=true;
                 $o['site'] = bird::slug($o['site'],'_-');
                 self::installSite($o['site']);
             }
             foreach($o['domain'] as $url) {
+                $installed=true;
                 self::addDomain(bird::slug($url, '-_.'));
             }
         } catch(Exception $e) {
             App::output($e->getMessage());
         }
 
+        if(!$installed) {
+            App::output("  Nothing done. Usage: .\n\n    php Birds/bird.php install --apps-dir=Birds --site=bird --domain=localhost --domain=localhost.localdomain\n\n");
+        }
+        /*
+
+        chdir(self::$apps);
+        exec('git init && git add . && git commit -a -m "Birds installation"');
+        */
 
 
         //App::output("\nThis is the ".bird::number(microtime(true)-BIRD_TIME,9)."s\n");
@@ -143,6 +156,30 @@ class Installer
             throw new \Exception("  --domain is not valid or is not writeable, please select proper one.\n");
         }
         bird::save(self::$apps.'/config/sites/'.$url.'.txt', self::$site);
+    }
+
+    public static function gitUpdate()
+    {
+        $err=array();
+        $hasGit = exec('git --version 2>/dev/null', $err);
+        if(!$hasGit) {
+            return false;
+        }
+        App::output("  Updating with {$hasGit}\n");
+
+        $cwd = getcwd();
+        if(is_dir(BIRD_APP_ROOT.'/.git')) {
+            if($cwd!=BIRD_APP_ROOT) {
+                chdir(BIRD_APP_ROOT);
+            }
+        } else if($cwd!=BIRD_ROOT) {
+            if($cwd!=BIRD_APP_ROOT) {
+                chdir(BIRD_APP_ROOT);
+            }
+        }
+        exec('git pull && git submodule init && git submodule update && git submodule status', $err);
+        chdir($cwd);
+        unset($cwd, $hasGit, $err);
     }
 
 }
