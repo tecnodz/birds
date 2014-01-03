@@ -57,3 +57,4 @@ $(function(){
     }
 
 });
+// window.bird=false; // unload Birds CMS

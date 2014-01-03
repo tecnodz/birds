@@ -51,9 +51,8 @@ class Content
     /**
      * Outputs the layout for the given format (or the first available format)
      */
-    public function render($format='text/html')
+    public function render($format='text/html', $rid='')
     {
-        $wrap=array('', '');
         if(is_null($this->content)) {
             try {
                 if($this->class) {
@@ -87,10 +86,6 @@ class Content
                     } else if(file_exists($c=$contentDir.'/'.$this->uid) || ($ext && file_exists($c=$contentDir.'/'.$this->uid.'.'.$ext))) {
                         $found=true;
                     }
-                    if($format=='text/html') {
-                        $wrap[0]='<div data-content="'.\bird::xml($this->uid).'">';
-                        $wrap[1]='</div>';
-                    }
                     if(!$found) {
                         $this->content=false;
                     } else {
@@ -104,7 +99,10 @@ class Content
                 $this->content=false;
             }
         }
-        return $wrap[0].$this->content.$wrap[1];
+        if($format=='text/html' && $rid && !is_int($rid)) {
+            return '<div data-content="'.\bird::xml($rid).'">'.$this->content.'</div>';
+        }
+        return $this->content;
     }
 
 

@@ -31,7 +31,8 @@ namespace Birds\App;
 class Layout
 {
     public static 
-        $default='/default.yml';
+        $default='/default.yml',
+        $vars=array('$BIRD_TITLE'=>'', '$BIRD_VERSION'=>BIRD_VERSION, '$BIRD_ENV'=>'');
     public $formats=array('text/html'),
         $meta,
         $slots,
@@ -69,6 +70,12 @@ class Layout
                 unset($n, $v);
             }
         }
+        self::$vars['$BIRD_ENV']=(\bird::env()=='dev')?('dev,'.date('YmdHis')):(\bird::env());
+    }
+
+    public function __wakeup()
+    {
+        self::$vars['$BIRD_ENV']=(\bird::env()=='dev')?('dev,'.date('YmdHis')):(\bird::env());
     }
 
     /**
@@ -123,7 +130,7 @@ class Layout
             foreach($this->content as $slot=>$cs) {
                 foreach($cs as $i=>$c) {
                     $r = Content::find($c, $format);
-                    if($r) \Birds\App::output($r->render($format));
+                    if($r) \Birds\App::output($r->render($format, $i));
                     unset($r, $i, $c);
                 }
                 unset($slot, $cs);
@@ -144,36 +151,39 @@ class Layout
             foreach($this->content as $slot=>$cs) {
                 foreach($cs as $i=>$c) {
                     $r = Content::find($c);
-                    if($r) $content[$slot][] = $r;
+                    if($r) $content[$slot][$i] = $r;
                     unset($r, $i, $c);
                 }
                 unset($slot, $cs);
             }
         }
 
+        $s = array_keys(self::$vars);
+        $r = array_values(self::$vars);
         \Birds\App::output(((isset($this->openTags['html']))?($this->openTags['html']):('<html>'))
             . ((isset($this->openTags['head']))?($this->openTags['head']):('<head>')));
         if(is_array($this->meta)) {
             foreach($this->meta as $n=>$v) {
                 if($n=='header') {
-                    \Birds\App::header($v);
+                    \Birds\App::header(str_replace($s, $r, $v));
                 } else if($n=='title') {
                     if(is_array($v)) $v = implode(': ', $v);
-                    \Birds\App::output('<title>'.\Birds\bird::xml($v).'</title>');
+                    \Birds\App::output('<title>'.\Birds\bird::xml(str_replace($s, $r, $v)).'</title>');
                 } else if($n=='stylesheet') {
-                    \Birds\App::output(\Birds\bird::minify($v));
+                    \Birds\App::output(\Birds\bird::minify(str_replace($s, $r, $v)));
                 } else if($n=='script') {
-                    if($this->jsOnTop) \Birds\App::output(Assets::minify($v));
-                    else $js = \Birds\bird::minify($v);
+                    if($this->jsOnTop) \Birds\App::output(Assets::minify(str_replace($s, $r, $v)));
+                    else $js = \Birds\bird::minify(str_replace($s, $r, $v));
                 } else {
                     if(substr($n, 0, 1)=='@') $n = substr($n,1);
                     if(is_array($v)) {
+                        $v = str_replace($s, $r, $v);
                         foreach($v as $vv) {
                             \Birds\App::output('<meta name="'.$n.'" content="'.\Birds\bird::xml($vv).'" />');
                             unset($vv);
                         }
                     } else {
-                        \Birds\App::output('<meta name="'.$n.'" content="'.\Birds\bird::xml($v).'" />');
+                        \Birds\App::output('<meta name="'.$n.'" content="'.\Birds\bird::xml(str_replace($s, $r, $v)).'" />');
                     }
 
                 }
@@ -206,7 +216,7 @@ class Layout
                 \Birds\App::output('<div'.((isset($id))?(' id="'.\bird::xml($id).'"'):('')).' data-slot="'.\bird::xml($slot).'">'.$tags[0]);
                 // render content
                 foreach($content[$slot] as $i=>$c) {
-                    \Birds\App::output($c->render('text/html'));
+                    \Birds\App::output($c->render('text/html', $i));
                     unset($c, $content[$slot][$i], $i);
                 }
                 unset($content[$slot], $id);
@@ -214,7 +224,7 @@ class Layout
             }
             unset($slot, $tags);
         }
-        unset($content);
+        unset($content, $s, $r);
 
         \Birds\App::output(((isset($js))?($js):(''))
             . ((isset($this->closeTags['body']))?($this->closeTags['body']):('</body>'))
@@ -243,7 +253,7 @@ class Layout
     /**
      * Content componser: adds new content entries without removing existing entries
      */
-    public function addContent($a=array())
+    public function addContent($a=array(), $key='c')
     {
         if(!is_array($a)) {
             $a = array('body'=>$a);
@@ -251,11 +261,11 @@ class Layout
         foreach($a as $slot=>$cs) {
             if(!isset($this->content[$slot])) $this->content[$slot]=array();
             if(!is_array($cs)) {
-                $this->content[$slot][]=$cs;
+                $this->content[$slot][$key.'-0']=$cs;
             } else {
-                foreach($cs as $c) {
-                    $this->content[$slot][]=$c;
-                    unset($c);
+                foreach($cs as $k=>$c) {
+                    $this->content[$slot][$key.'-'.$k]=$c;
+                    unset($c, $k);
                 }
             }
             unset($slot,$cs);

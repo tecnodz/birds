@@ -98,6 +98,12 @@ class Assets
             throw new HttpException(404);
         }
         $df = \bird::app()->Birds['document-root'].\bird::scriptName(true);
+        if(!is_writable($df) && !is_writable(dirname($df))) {
+            $df = \Birds\Cache\File::cacheDir().'/web'.\bird::scriptName(true);
+            if(!is_dir(dirname($df))) {
+                mkdir(dirname($df), 0777, true);
+            }
+        }
         unset($f);
         $lmod = filemtime($sf[0]);
         $req = \Birds\App::request();
@@ -112,6 +118,9 @@ class Assets
                 }
                 unset($f, $mod);
             }
+        }
+        if(count($sf)>0) {
+            $df = dirname($df).'/'.md5(\Birds\bird::site().':'.implode(':', $sf)).'.'.$ext;
         }
         if(!file_exists($df) || $lmod > filemtime($df)) {
             Assets::combine($sf, $df, $ext);
@@ -134,6 +143,7 @@ class Assets
         if($root && file_exists($f=$root.$url)) {
         } else if(file_exists($f=\Birds\bird::app()->Birds['document-root'].$url)) {
         } else if(is_array($d=\Birds\bird::app()->Birds['routes-dir'])) {
+            unset($f);
             foreach($d as $dn) {
                 if(file_exists($f=$dn.$url)) {
                     unset($dn);
@@ -144,6 +154,8 @@ class Assets
             unset($d);
         } else if(file_exists($f=$d.$url)) {
             unset($d);
+        } else {
+            unset($f);
         }
 
         if(isset($f)) {
@@ -165,7 +177,7 @@ class Assets
         if($compress && !file_exists(self::$paths['java'])) {
             $compress = false;
         }
-        $r='';$css=array();$js=array();$jsn='';$cssn='';
+        $r='';$css=array();$js=array();$jsn='';$cssn='';//\Birds\Cache::siteKey().':';
         foreach($s as $f) {
             if(strpos($f, '<')!==false) {
                 if($combine && preg_match_all('#<script [^>]*src="([^"\?\:]+)"[^>]*>\s*</script>|<link [^>]*type="text/css"[^>]*href="([^"\?\:]+)"[^>]*>#i', $f, $m)) {
@@ -269,6 +281,7 @@ class Assets
             foreach($fs as $i=>$cf) {
                 if(substr($cf, -5)=='.less') {
                     if(!isset($lc)) {
+                        \bird::log(ini_set('memory_limit', '8M'));
                         if(!class_exists('lessc')) require_once BIRD_ROOT.'/lib/lessphp/lessc.inc.php';
                         $lc = new \lessc();
                         $lc->setVariables(array('assets-url'=>'"'.self::$assetsUrl.'"'));
@@ -343,19 +356,21 @@ class Assets
         if (isset($_GET['t']))
             $expires = 86400;
         $lastmod = filemtime($file);
-        if ($format != '')
-            @header('Content-Type: ' . $format);
-        else {
-            //$format = \Birds\bird::fileFormat($file);
+
+        if (!$format) {
             $format = Route::mimeType($extension);
-            if ($format)
-                @header('Content-Type: ' . $format);
         }
+
         $gzip = false;
-        if (($format=='application/javascript' || substr($format, 0, 5) == 'text/') && isset($_SERVER['HTTP_ACCEPT_ENCODING']) && substr_count($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip'))
-            $gzip = true;
-        if (substr($format, 0, 5) == 'text/')
+        if($format=='application/javascript' || substr($format, 0, 5) == 'text/') {
+            @header('Content-Type: ' . $format.';charset=utf-8');
             @header('Vary: Accept-Encoding', false);
+            if (isset($_SERVER['HTTP_ACCEPT_ENCODING']) && substr_count($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip')) {
+                $gzip = true;
+            }
+        } else {
+            @header('Content-Type: ' . $format);
+        }
         if ($nocache) {
             @header('Cache-Control: no-cache, no-store, max-age=0, must-revalidate');
             @header('Expires: Thu, 11 Oct 2007 05:00:00 GMT'); // Date in the past

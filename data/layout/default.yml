@@ -1,7 +1,8 @@
 ---
 meta:
   title: ~
-  stylesheet: /_/css/birds.less
+  script: '<script>Modernizr.load([{test:window.jQuery,nope:"/_/js/jquery.js"},{test:("bird" in window),nope:"/bird-cms.js?$BIRD_ENV",complete:function(){Modernizr.load([{test:window.Bird,yep:["/bird-cms/bird.js?Cms,$BIRD_ENV","/bird-cms/bird-cms.css?$BIRD_ENV"],complete:function(){bird.ready()}}])}}]);</script>'
+  stylesheet: "/_/css/birds.less"
 slots: [ header, body, nav, footer ]
 content:
   header: [ header ]

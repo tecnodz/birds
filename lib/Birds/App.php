@@ -210,11 +210,9 @@ class App
                 $ui=@parse_url($_SERVER['REQUEST_URI']);
                 if(!$ui) {
                     $ui=array();
+                    $ui['path']=bird::safePath($_SERVER['REQUEST_URI']);
                     if(strpos($_SERVER['REQUEST_URI'], '?')!==false) {
-                        $ui['path']=substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '?'));
                         $ui['query']=substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], '?')+1);
-                    } else {
-                        $ui['path']=$_SERVER['REQUEST_URI'];
                     }
                 }
             } else {
@@ -229,12 +227,12 @@ class App
                 unset($arg);
             }
             self::$request['query-string']=(isset($ui['query']))?($ui['query']):('');
-            self::$request['script-name']=$ui['path'];
-            if (preg_match('/\.('.implode('|', $removeExtensions).')$/i', $ui['path'], $m)) {
-                self::$request['self']=substr($ui['path'],0,strlen($ui['path'])-strlen($m[0]));
+            self::$request['script-name']=bird::safePath($ui['path']);
+            if (preg_match('/\.('.implode('|', $removeExtensions).')$/i', self::$request['script-name'], $m)) {
+                self::$request['self']=substr(self::$request['script-name'],0,strlen(self::$request['script-name'])-strlen($m[0]));
                 self::$request['extension']=substr($m[0],1);
             } else {
-                self::$request['self']=$ui['path'];
+                self::$request['self']=self::$request['script-name'];
             }
             unset($ui);
             self::$request['get']=$_GET;

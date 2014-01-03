@@ -88,7 +88,13 @@ class Route
             $this->layout->addMeta($o['meta']);
         }
         if(isset($o['content'])) {
-            $this->layout->addContent($o['content']);
+            if($save) {
+                $h = \bird::hash($save);
+                \Birds\Cache::set('Route/'.$h, $save);
+                $save = $h;
+                unset($h);
+            }
+            $this->layout->addContent($o['content'], $save);
         }
         // set available formats for layout
         if(isset($o['formats']) && is_array($o['formats'])) {

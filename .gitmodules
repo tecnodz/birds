@@ -4,9 +4,6 @@
 [submodule "lib/Spyc"]
 	path = lib/Spyc
 	url = git://github.com/mustangostang/spyc.git
-[submodule "data/web/wysiwyg"]
-	path = data/web/wysiwyg
-	url = https://github.com/mindmup/bootstrap-wysiwyg.git
-[submodule "data/web/_/js/wysiwyg"]
-	path = data/web/_/js/wysiwyg
+[submodule "data/web/_/lib/wysiwyg"]
+	path = data/web/_/lib/wysiwyg
 	url = https://github.com/mindmup/bootstrap-wysiwyg.git

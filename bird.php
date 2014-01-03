@@ -28,7 +28,8 @@ namespace Birds {
 class bird
 {
 	public static 
-        $debugEnv=true,
+        $debugEnv=false,
+        $baseCredential=0,
         $lang='en',
         $lib=array(),
         $dateFormat='d/m/Y',
@@ -67,7 +68,14 @@ class bird
         return self::$app;
 	}
 
-
+    public static function hash($s, $c='adler32')
+    {
+        if(function_exists('gmp_strval')) {
+            return gmp_strval(gmp_intval(hash($c, $s),16),62);
+        } else {
+            return hash($c, $s);
+        }
+    }
 
 
     /**
@@ -139,11 +147,12 @@ class bird
     {
         if(!is_null($server)) self::$_server=$server;
         if(is_null(self::$_server)) {
-            if(!(self::$_server=Cache::getApc('hostname',0))){
+            $cn = (function_exists('apc_store'))?('\\Birds\\Cache\\Apc'):('\\Birds\\Cache\\File');
+            if(!(self::$_server=$cn::get('hostname',0))){
                 self::$_server=exec('hostname -f');
                 if(!self::$_server) self::$_server = 'localhost.localdomain';
                 else if(!strpos(self::$_server, '.')) self::$_server .= '.localdomain';
-                Cache::setApc('hostname', self::$_server, 0);
+                $cn::set('hostname', self::$_server, 0);
             }
         }
         return self::$_server;
@@ -163,20 +172,15 @@ class bird
                 self::$scriptRealName=null;
             }  
             if(is_string($sn)) {
+                $sn = self::safePath($sn);
                 self::$scriptName = $sn;
                 if($override) self::$scriptRealName = $sn;
             } else {
                 if (is_null(self::$scriptRealName)) {
                     if(isset($_SERVER['REDIRECT_STATUS']) && $_SERVER['REDIRECT_STATUS']=='200' && isset($_SERVER['REDIRECT_URL'])) {
-                        self::$scriptRealName = $_SERVER['REDIRECT_URL'];
+                        self::$scriptRealName = self::safePath($_SERVER['REDIRECT_URL']);
                     } else if (isset($_SERVER['REQUEST_URI'])) {
-                        $qspos = strpos($_SERVER['REQUEST_URI'], '?');
-                        if($qspos!==false) {
-                            self::$scriptRealName = substr($_SERVER['REQUEST_URI'], 0, $qspos);
-                        } else {
-                            self::$scriptRealName = $_SERVER['REQUEST_URI'];
-                        }
-                        unset($qspos);
+                        self::$scriptRealName = self::safePath($_SERVER['REDIRECT_URL']);
                     } else {
                         self::$scriptRealName = '';
                     }
@@ -194,6 +198,16 @@ class bird
         }
         return self::$scriptName;
     }
+
+    public function safePath($s)
+    {
+        if($q=strpos($s, '?')) {
+            $s = substr($s, 0, $q);
+        }
+        unset($q);
+        return preg_replace('#(/\.\.?)+/#', '/', strtr($s, array('<'=>'', '>'=>'', '&'=>'', '\\'=>'/')));
+    }
+
 
     public static function requestUri($qs=null)
     {
@@ -276,14 +290,14 @@ class bird
     {
         if(is_null(self::$session)) {
             foreach(self::cookies($n=Session::name()) as $c) {// get cookie id from config
-                if($u=\Birds\Cache::get('session/'.$c)) {
+                if($u=Cache::get('session/'.$c)) {
                     break;
                 }
                 unset($u);
             }
             if(!isset($u)) {
                 if(!isset($c)) $c = uniqid();
-                $u = new \Birds\Session();
+                $u = new Session();
             }
             self::$session = $u;
             Session::$id = $c;
@@ -341,6 +355,7 @@ class bird
             }
             @header('Cache-Control: '.self::$vars['cache-control']);
             @header('Cache-Control: max-age='.$expires.', s-maxage='.$expires, false);
+            @header('Expires: '.gmdate("D, d M Y H:i:s", time() + $expires) . " GMT");
         }
         return self::$vars['cache-control'];
     }
@@ -442,8 +457,13 @@ class bird
             echo "\n";
             unset($k, $v);
         }
-        if(self::$debugEnv) echo '-- Time: '.self::number(microtime(true) - BIRD_TIME, 6).'s -- Mem: '.self::bytes(memory_get_usage())." -- \n";
+        if(self::$debugEnv) echo self::status()."\n";
         self::end();
+    }
+
+    public function status()
+    {
+        return '-- URL: '.self::scriptName(true).' Time: '.self::number(microtime(true) - BIRD_TIME, 6).'s -- Mem: '.self::bytes(memory_get_usage()).' --';
     }
 
     public static function end()
@@ -814,6 +834,7 @@ class bird
                 unset($libi,$dir);
             }
         }
+        unset($c);
         if($f) {
             if($l) {
                 @include_once $f;

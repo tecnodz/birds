@@ -52,7 +52,7 @@ class User {
      * 
      * Set each sign in option within Birds/User/SingleSignOn configuration:
      *
-     * SingleSignOnComponent:
+     * SingleSignOn:
      *   url:             (string) Base URL
      *   signOutParam:    (string, default: bye) URL part that forces the idp to disconnect
      *   idp:
