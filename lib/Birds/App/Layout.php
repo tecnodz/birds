@@ -130,7 +130,7 @@ class Layout
             foreach($this->content as $slot=>$cs) {
                 foreach($cs as $i=>$c) {
                     $r = Content::find($c, $format);
-                    if($r) \Birds\App::output($r->render($format, $i));
+                    if($r) \Birds\App::output($r->render($format, $slot.'/'.$i));
                     unset($r, $i, $c);
                 }
                 unset($slot, $cs);
@@ -213,10 +213,10 @@ class Layout
                         $tags=array('<div id="'.$slot.'">', '</div>');
                     }
                 }
-                \Birds\App::output('<div'.((isset($id))?(' id="'.\bird::xml($id).'"'):('')).' data-slot="'.\bird::xml($slot).'">'.$tags[0]);
+                \Birds\App::output('<div'.((isset($id))?(' id="'.\bird::xml($id).'"'):('')).'>'.$tags[0]);
                 // render content
                 foreach($content[$slot] as $i=>$c) {
-                    \Birds\App::output($c->render('text/html', $i));
+                    \Birds\App::output($c->render('text/html', $slot.'/'.$i));
                     unset($c, $content[$slot][$i], $i);
                 }
                 unset($content[$slot], $id);

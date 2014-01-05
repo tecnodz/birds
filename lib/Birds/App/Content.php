@@ -30,6 +30,7 @@
 namespace Birds\App;
 class Content
 {
+    public static $itemtype='WebPageElement', $schemaid='r';
     public $class,          # class name where this object is defined
         $uid,               # primary key from $className to search for. If not defined, $method will be called statically.
         $method='render',   # method to use for rendering
@@ -100,7 +101,7 @@ class Content
             }
         }
         if($format=='text/html' && $rid && !is_int($rid)) {
-            return '<div data-content="'.\bird::xml($rid).'">'.$this->content.'</div>';
+            return \Birds\Schema::signature('Birds\\App\\Content', Route::$current.'#'.$rid, $this->content);
         }
         return $this->content;
     }

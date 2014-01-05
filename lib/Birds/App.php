@@ -370,12 +370,14 @@ class App
      */
     public function language($l=array())
     {
-        if(is_array($l) && count($l)<2) {
+        if(!is_array($l)) {
+            $lang = $l;
+        } else if(count($l)<2) {
             $lang = $l[0];
         } else if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
             $accept = preg_split('/(;q=[0-9\.]+|\,)\s*/', $_SERVER['HTTP_ACCEPT_LANGUAGE'], null, PREG_SPLIT_NO_EMPTY);
             foreach ($accept as $lang) {
-                if (isset($l[0]) && in_array($lang, $l)) {
+                if (in_array($lang, $l) || (strlen($lang)>2 && in_array($lang=substr($lang,0,2), $l))) {
                     break;
                 }
                 unset($lang);

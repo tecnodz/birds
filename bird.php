@@ -68,15 +68,32 @@ class bird
         return self::$app;
 	}
 
-    public static function hash($s, $c='adler32')
+    public static function hash($s)
     {
-        if(function_exists('gmp_strval')) {
-            return gmp_strval(gmp_intval(hash($c, $s),16),62);
-        } else {
-            return hash($c, $s);
+        return self::encrypt($s);
+    }
+    /**
+     * This function should be used for two-way encryption and decryption.
+     *
+     * Should clearly be optimized...
+     */
+    public static function encrypt($s, $alg=null)
+    {
+        /*
+        if(!function_exists('gzcompress')) {
+            $s = gzcompress($s);
         }
+        */
+        $s = base64_encode($s);
+        if(substr($s, -2)=='==') $s = substr($s, 0, strlen($s) -2);
+        else if(substr($s, -1)=='=') $s = substr($s, 0, strlen($s) -1);
+        return $s;
     }
 
+    public static function unencrypt($s, $alg=null)
+    {
+        return base64_decode($s);
+    }
 
     /**
      * Gets/sets current server name

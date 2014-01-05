@@ -6,7 +6,7 @@ meta:
 slots: [ header, body, nav, footer ]
 content:
   header: [ header ]
-  footer: [ footer ]
+  footer: [ footer, { class: Birds\Schema, method: signature } ]
 options:
   open-tags:
     html: '<!DOCTYPE html><html>'

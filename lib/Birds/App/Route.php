@@ -30,7 +30,8 @@
 namespace Birds\App;
 class Route
 {
-	protected static $base; // folders where to look for routes
+    public static $current, $itemtype='WebPage', $schemaid='r'; // current route
+    protected static $base; // folders where to look for routes
     public $format,
         $layout,
         $formats,
@@ -88,12 +89,15 @@ class Route
             $this->layout->addMeta($o['meta']);
         }
         if(isset($o['content'])) {
+            /*
             if($save) {
                 $h = \bird::hash($save);
                 \Birds\Cache::set('Route/'.$h, $save);
                 $save = $h;
                 unset($h);
             }
+            $this->layout->addContent($o['content'], $save);
+            */
             $this->layout->addContent($o['content'], $save);
         }
         // set available formats for layout
@@ -171,8 +175,11 @@ class Route
 
         // search for the route configuration file
         foreach(self::$base as $b) {
-            $r = self::validateRoute($b.$dir.'.yml', $ext);
-            if($r) return $r;
+            $r = self::validateRoute($route, $b.$dir.'.yml', $ext);
+            if($r) {
+                self::$current = $route;
+                return $r;
+            }
             unset($b, $r);
         }
         if($dir!='/') {
@@ -180,9 +187,10 @@ class Route
             while(isset($pd[0])) {
                 array_pop($pd);
                 foreach(self::$base as $b) {
-                    $r = self::validateRoute($b.'/'.implode('/',$pd).'.yml', $ext, true);
+                    $r = self::validateRoute($route, $b.'/'.implode('/',$pd).'.yml', $ext, true);
                     if($r && $r->multiviews) {
-                        if($updateScriptName) \Birds\bird::scriptName('/'.implode('/',$pd));
+                        self::$current = '/'.implode('/',$pd);
+                        if($updateScriptName) \Birds\bird::scriptName(self::$current);
                         return $r;
                     }
                     unset($b, $r);
@@ -203,7 +211,7 @@ class Route
      *
      * @return Bird\Route or false if route is not valid
      */
-	public static function validateRoute($f, $ext=false, $multiviews=false)
+	public static function validateRoute($sn, $f, $ext=false, $multiviews=false)
 	{
         if(!file_exists($f)) {
             return false;
@@ -218,7 +226,7 @@ class Route
                 else if(!BIRD_CLI && ((isset($r['options']['http']) && $r['options']['http']==false) || (isset($r['options']['shell']) && $r['options']['shell']==true))) $r=false;
             }
             if($r) {
-                if(!is_object($r)) $r = new Route($r, $f);
+                if(!is_object($r)) $r = new Route($r, $sn);
                 if($ext && !$r->setFormat($ext)) {
                     unset($r);
                     $r=false;
