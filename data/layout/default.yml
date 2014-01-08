@@ -1,12 +1,13 @@
 ---
 meta:
   title: ~
-  script: '<script>Modernizr.load([{test:window.jQuery,nope:"/_/js/jquery.js"},{test:("bird" in window),nope:"/bird-cms.js?$BIRD_ENV",complete:function(){Modernizr.load([{test:window.Bird,yep:["/bird-cms/bird.js?Cms,$BIRD_ENV","/bird-cms/bird-cms.css?$BIRD_ENV"],complete:function(){bird.ready()}}])}}]);</script>'
   stylesheet: "/_/css/birds.less"
 slots: [ header, body, nav, footer ]
 content:
-  header: [ header ]
-  footer: [ footer, { class: Birds\Schema, method: signature } ]
+  header:
+    0: header
+  footer:
+    0: footer
 options:
   open-tags:
     html: '<!DOCTYPE html><html>'

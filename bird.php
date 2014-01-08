@@ -324,32 +324,21 @@ class bird
         return self::$session;
     }
 
-    public static function getBrowserCache($etag, $lastModified, $expires=false)
+    //public static function getBrowserCache($etag, $lastModified, $expires=false, $end=true)
+    public static function browserCache($lastModified, $expires=false, $end=true)
     {
-        @header(
-            'Last-Modified: '.
-            gmdate("D, d M Y H:i:s", $lastModified) . ' GMT'
-        );
+        @header('Last-Modified: '.gmdate("D, d M Y H:i:s", $lastModified) . ' GMT');
         $cacheControl = self::cacheControl(null, $expires);
-        if ($expires && $cacheControl=='public') {
-            @header('Expires: '. gmdate("D, d M Y H:i:s", time() + $expires) . ' GMT');
-        }
-        @header('ETag: "'.$etag.'"');
 
-        $if_none_match = (isset($_SERVER['HTTP_IF_NONE_MATCH']))?(stripslashes($_SERVER['HTTP_IF_NONE_MATCH'])):(false);
         $if_modified_since = (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']))?(strtotime(stripslashes($_SERVER['HTTP_IF_MODIFIED_SINCE']))):(false);
-        if (!$if_modified_since && !$if_none_match) {
+        if (!$if_modified_since || $if_modified_since == $lastModified) {
             return;
-        } else if ($if_none_match && $if_none_match != $etag && $if_none_match != '"' . $etag . '"') { 
-            return; // etag is there but doesn't match
-        } else if ($if_modified_since && $if_modified_since != $lastModified) {
-            return; // if-modified-since is there but doesn't match
         }
         /**
          * Nothing has changed since their last request - serve a 304 and exit
          */
         @header('HTTP/1.1 304 Not Modified');
-        self::end();
+        if($end) self::end();
     }
 
     public static function cacheControl($set=null, $expires=null)
@@ -365,13 +354,13 @@ class bird
         }
         if(!is_null($expires)) {
             $expires = (int)$expires;
-            $cc = preg_replace('/\,.*/', '', self::$vars['cache-control']);
+            //$cc = preg_replace('/\,.*/', '', self::$vars['cache-control']);
             if (function_exists('header_remove')) {
                 @header_remove('Cache-Control');
                 @header_remove('Pragma');
             }
             @header('Cache-Control: '.self::$vars['cache-control']);
-            @header('Cache-Control: max-age='.$expires.', s-maxage='.$expires, false);
+            //@header('Cache-Control: max-age='.$expires.', s-maxage='.$expires, false);
             @header('Expires: '.gmdate("D, d M Y H:i:s", time() + $expires) . " GMT");
         }
         return self::$vars['cache-control'];
@@ -765,7 +754,7 @@ class bird
      */
     public static function minify($s, $root=false, $compress=true, $before=true, $raw=false)
     {
-        return App\Assets::minify($s, $root, $compress, $before, $raw);
+        return App\Minifier::minify($s, $root, $compress, $before, $raw);
     }
 
     /**

@@ -26,7 +26,7 @@
 namespace Birds;
 class Schema {
 
-    public static $defaultItemType='Dataset';
+    public static $defaultItemType='Dataset', $cms;
 
     public function __toString()
     {
@@ -45,9 +45,12 @@ class Schema {
         } else {
             $p = array('itemtype'=>self::$defaultItemType);
         }
-        if($id) {
+        if(is_null(self::$cms)) {
+            self::$cms = \Birds\bird::app()->Birds['cms'];
+        }
+        if($id && self::$cms) {
             $cn = (property_exists($cn, 'schemaid'))?($cn::$schemaid):(bird::encrypt($cn));
-            $p['itemid'] = '/_b/'.$cn.'/'.$id;//bird::encrypt($id);
+            $p['itemid'] = self::$cms.'/'.$cn.'/'.bird::encrypt($id);
         }
 
         if(substr($p['itemtype'], 0, 4)!='http') {
@@ -57,7 +60,7 @@ class Schema {
         return $p;
     }
 
-    public static function signature($cn='text/html', $id=null, $c='Birds')
+    public static function signature($cn, $id=null, $c='Birds', $divid='')
     {
         if($cn=='text/html') {
             $cn = 'Birds\\App\\Route';
@@ -68,7 +71,7 @@ class Schema {
             }
             $cn = get_class($cn);
         }
-        $s = '<div itemscope';
+        $s = '<div'.(($divid)?(' id="'.$divid.'"'):('')).' itemscope';
         foreach(self::attributes($cn, $id) as $k=>$v) {
             $s .= " {$k}=\"{$v}\"";
             unset($k, $v);

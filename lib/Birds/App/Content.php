@@ -31,7 +31,8 @@ namespace Birds\App;
 class Content
 {
     public static $itemtype='WebPageElement', $schemaid='r';
-    public $class,          # class name where this object is defined
+    public $cid,            # internal content ID
+        $class,             # class name where this object is defined
         $uid,               # primary key from $className to search for. If not defined, $method will be called statically.
         $method='render',   # method to use for rendering
         $credentials,       # content credentials. If fails, the contents is not shown.
@@ -52,7 +53,7 @@ class Content
     /**
      * Outputs the layout for the given format (or the first available format)
      */
-    public function render($format='text/html', $rid='')
+    public function render($format='text/html')
     {
         if(is_null($this->content)) {
             try {
@@ -100,8 +101,8 @@ class Content
                 $this->content=false;
             }
         }
-        if($format=='text/html' && $rid && !is_int($rid)) {
-            return \Birds\Schema::signature('Birds\\App\\Content', Route::$current.'#'.$rid, $this->content);
+        if($format=='text/html' && $this->cid) {
+            return \Birds\Schema::signature('Birds\\App\\Content', Route::$current.'#'.$this->cid, $this->content);
         }
         return $this->content;
     }
@@ -128,7 +129,7 @@ class Content
      *         prepare: ~       # if true, should be executed before any output is sent
      *
      */
-    public static function find($c, $f='text/html')
+    public static function find($c, $f='text/html', $output=false)
     {
         if(!$c) return false;
         if(!is_array($c)) {
@@ -137,6 +138,11 @@ class Content
         }
         $c = new Content($c);
         // check credentials
+        if($output) {
+            \Birds\App::output($c->render($f));
+            unset($c);
+            return true;
+        }
         if($c->prepare) $c->render($f);
         return $c;
     }

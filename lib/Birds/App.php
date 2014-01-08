@@ -178,7 +178,7 @@ class App
         }
     }
 
-    public static function end($exception=true)
+    public static function end($exception=false)
     {
         if(!is_null(bird::$session)) {
             // store session

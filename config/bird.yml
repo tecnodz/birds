@@ -11,3 +11,4 @@ all:
     model-dir:  "$BIRD_SITE_ROOT/data/model:$BIRD_APP_ROOT/data/model:$BIRD_ROOT/data/model"
     credential-dir:  "$BIRD_SITE_ROOT/data/credential:$BIRD_APP_ROOT/data/credential:$BIRD_ROOT/data/credential"
     assets-url: "/_"
+    cms: '/_b'

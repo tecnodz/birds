@@ -30,11 +30,13 @@
 namespace Birds\App;
 class Route
 {
-    public static $current, $itemtype='WebPage', $schemaid='r'; // current route
+    public static $current, $itemtype='WebPage', $schemaid='r', $active; // current route
     protected static $base; // folders where to look for routes
     public $format,
         $layout,
-        $formats,
+        $meta,
+        $content,
+        $formats=array('text/html'),
         $credentials,
         $multiviews,
         $shell;
@@ -84,11 +86,15 @@ class Route
 
         $app = \Birds\bird::app();
         // create or set the layout and add $o['content'] and $o['meta'] to it.
-        $this->layout = Layout::find((isset($o['layout']))?($o['layout']):(false));
-        if(isset($o['meta'])) {
-            $this->layout->addMeta($o['meta']);
+        if(isset($o['layout']) || !array_key_exists('layout', $o)) {
+            $this->layout = Layout::find((isset($o['layout']))?($o['layout']):(false));
         }
-        if(isset($o['content'])) {
+        //$this->layout = Layout::find((isset($o['layout']))?($o['layout']):(false));
+        if(isset($o['meta']) && $o['meta']) {
+            //$this->layout->addMeta($o['meta']);
+            $this->meta = $o['meta'];
+        }
+        if(isset($o['content']) && $o['content']) {
             /*
             if($save) {
                 $h = \bird::hash($save);
@@ -98,11 +104,13 @@ class Route
             }
             $this->layout->addContent($o['content'], $save);
             */
-            $this->layout->addContent($o['content'], $save);
+            //$this->layout->addContent($o['content'], $save);
+            $this->content = (is_array($o['content']))?($o['content']):(array('body'=>$o['content']));
         }
         // set available formats for layout
         if(isset($o['formats']) && is_array($o['formats'])) {
-            $this->layout->formats=$o['formats'];
+            //$this->layout->formats=$o['formats'];
+            $this->formats = $o['formats'];
         }
 
         if(isset($o['options']) && is_array($o['options'])) {
@@ -118,13 +126,49 @@ class Route
     public function render($format=null)
     {
         if(is_null($format) && !is_null($this->format)) $format=$this->format;
+        if(!$format) {
+            $format = $this->formats[0];
+            if(!$format) return false;
+        }
+        $cf = \bird::camelize($format, true);
+        $b = dirname(__FILE__).'/Layout';
+        if(file_exists($b.'/'.($cf = \bird::camelize($format, true)).'.php') || (($cf = \bird::camelize(substr($format, 0, strpos($format, '/')), true)) && strpos($format, '/') && file_exists($b.'/'.$cf.'.php'))) {
+            $cn = 'Birds\\App\\Layout\\'.$cf;
+            $cn::render($format, $this);
+        } else {
+            unset($cf);
+            if(is_array($this->content)) {
+                foreach($this->content as $slot=>$cs) {
+                    foreach($cs as $i=>$c) {
+                        Content::find($c, $format, true);
+                        unset($r, $i, $c);
+                    }
+                    unset($slot, $cs);
+                }
+            }
+        }
+
+        /*
+        \bird::debug(__METHOD__);
+        if((($m='render'.ucfirst(\Birds\bird::camelize($format))) && $m!='render' && method_exists($this, $m)) || (($m='render'.ucfirst(substr($format, 0, strpos($format, '/')))) && $m!='render' && method_exists($this, $m))) {
+            return $this->$m($format);
+        } else {
+            //\Birds\bird::log(__METHOD__.': method '.$m.' does not exist!');
+            return $this->renderAny($format);
+        }
+        //\Birds\App::header('Content-Type: '.$format);
+        // prepare contents
+
+
         $r = $this->layout->render($format);
         if(is_string($r)) echo $r;
+        */
     }
 
     public function setFormat($format)
     {
-        if(in_array('*', $this->layout->formats) || in_array($format, $this->layout->formats)) {
+        if(in_array('*', $this->formats) || in_array($format, $this->formats) || 
+            ($this->layout && (in_array('*', $this->layout->formats) || in_array($format, $this->layout->formats)))) {
             $this->format=$format;
             return true;
         } else {
@@ -261,6 +305,7 @@ class Route
             'png'   => 'image/png',
             'gif'   => 'image/gif',
             'jpg'   => 'image/jpeg',
+            'ico'   => 'image/x-icon',
             'css'   => 'text/css',
             'less'  => 'text/css',
             'pdf'   => 'application/pdf',

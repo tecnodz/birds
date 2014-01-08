@@ -1,8 +1,9 @@
 <?php
 
+xdebug_start_trace('log/trace');
 require_once "bird.php";
 bird::$debugEnv = true;
-xdebug_start_trace('log/trace');
+bird::env('dev');
 $app = bird::app();
 $app->fly();
 unset($app);
