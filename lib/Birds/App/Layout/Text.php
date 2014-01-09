@@ -38,7 +38,7 @@ class Text
         if(is_array($route->content)) {
             foreach($route->content as $slot=>$cs) {
                 foreach($cs as $i=>$c) {
-                    $r = \Birds\App\Content::find($c, $format);
+                    $r = \Birds\App\Content::create($c, $format);
                     if($r) \Birds\App::output($r->render($format));
                     unset($r, $i, $c);
                 }

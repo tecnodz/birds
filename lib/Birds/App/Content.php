@@ -35,6 +35,7 @@ class Content
         $class,             # class name where this object is defined
         $uid,               # primary key from $className to search for. If not defined, $method will be called statically.
         $method='render',   # method to use for rendering
+        $params,
         $credentials,       # content credentials. If fails, the contents is not shown.
         $content,           # rendered content
         $prepare;           # if true, should be executed before any output is sent
@@ -64,12 +65,12 @@ class Content
                             $this->content = $cn::find($this->uid);
                             if($this->content && $this->method) {
                                 $m = $this->method;
-                                $this->content = $this->content->$m($format);
+                                $this->content = call_user_func_array(array($this->content, $m), ($this->params)?($this->params):(array($format)));
                                 unset($m);
                             }
                         } else if($this->method && method_exists($cn, $this->method)) {
                             $m = $this->method;
-                            $this->content = $cn::$m($format);
+                            $this->content = call_user_func_array(array($cn, $m), ($this->params)?($this->params):(array($format)));
                         }
                     }
                 } else if($this->uid) { // static content
@@ -124,12 +125,13 @@ class Content
      *         class: $cn       # class name where this object is defined
      *         uid: $id         # primary key from $className to search for. If not defined, $method will be called statically.
      *         method: render   # method to use for rendering
+     *         params: ~        # params to pass
      *         credentials: ~   # content credentials. If fails, the contents is not shown.
      *         content: ~       # rendered content
      *         prepare: ~       # if true, should be executed before any output is sent
      *
      */
-    public static function find($c, $f='text/html', $output=false)
+    public static function create($c, $f='text/html', $output=false)
     {
         if(!$c) return false;
         if(!is_array($c)) {

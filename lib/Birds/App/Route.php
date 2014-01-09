@@ -95,15 +95,6 @@ class Route
             $this->meta = $o['meta'];
         }
         if(isset($o['content']) && $o['content']) {
-            /*
-            if($save) {
-                $h = \bird::hash($save);
-                \Birds\Cache::set('Route/'.$h, $save);
-                $save = $h;
-                unset($h);
-            }
-            $this->layout->addContent($o['content'], $save);
-            */
             //$this->layout->addContent($o['content'], $save);
             $this->content = (is_array($o['content']))?($o['content']):(array('body'=>$o['content']));
         }
@@ -140,7 +131,7 @@ class Route
             if(is_array($this->content)) {
                 foreach($this->content as $slot=>$cs) {
                     foreach($cs as $i=>$c) {
-                        Content::find($c, $format, true);
+                        Content::create($c, $format, true);
                         unset($r, $i, $c);
                     }
                     unset($slot, $cs);

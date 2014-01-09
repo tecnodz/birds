@@ -70,29 +70,84 @@ class bird
 
     public static function hash($s)
     {
-        return self::encrypt($s);
+        return self::encrypt($s, 'uuid');
     }
     /**
      * This function should be used for two-way encryption and decryption.
-     *
-     * Should clearly be optimized...
      */
-    public static function encrypt($s, $alg=null)
+    public static function encrypt($s, $alg=null, $salt=null)
     {
-        /*
-        if(!function_exists('gzcompress')) {
-            $s = gzcompress($s);
+        if($alg) {
+            // unique random ids per string
+            // this is double-stored in file cache to prevent duplication
+            if($alg==='uuid') {
+                $sh = (strlen($s)>30 || preg_match('/[^a-z0-9-_]/i', $s))?(md5($s)):($s);
+                if($r=Cache::get('uuid/'.$sh, false, false, true)) {
+                    unset($sh);
+                    return $r;
+                } else {
+                    // generate uniqid in base64: 10 char string
+                    while(!$r) {
+                        $r = rtrim(strtr(base64_encode((function_exists('openssl_random_pseudo_bytes'))?(openssl_random_pseudo_bytes(7)):(pack('H*',uniqid(true)))), '+/', '-_'), '=');
+                        if(Cache\File::get('uuids/'.$r)) {
+                            $r='';
+                        }
+                    }
+                    Cache::set('uuid/'.$sh, $r, false, false, true);
+                    Cache::set('uuids/'.$r, $s, false, false, true);
+                }
+                unset($sh);
+                return $r;
+            } else {
+                if(is_null($salt)) {
+                    if(!($salt=Cache::get('rnd', false, false, true))) {
+                        $salt = (function_exists('openssl_random_pseudo_bytes'))?(openssl_random_pseudo_bytes(32)):(pack('H*',uniqid(true).uniqid(true).uniqid(true).uniqid(true).uniqid(true)));
+                        Cache::set('rnd', $salt, false, false, true);
+                    }
+                }
+                if(function_exists('openssl_encrypt')) {
+                    if($alg===true) $alg = 'AES-256-CFB';
+                    $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($alg));
+                    $s = $iv.openssl_encrypt($s, $alg, $salt, 0, $iv);
+                } else if(function_exists('mcrypt_encrypt')) {
+                    if($alg===true) $alg = '3DES';
+                    # create a random IV to use with CBC encoding
+                    $iv = mcrypt_create_iv(mcrypt_get_iv_size($alg, MCRYPT_MODE_CBC), MCRYPT_RAND);
+                    $s = $iv.mcrypt_encrypt($alg, $salt, $s, MCRYPT_MODE_CBC, $iv);
+                }
+            }
         }
-        */
-        $s = base64_encode($s);
-        if(substr($s, -2)=='==') $s = substr($s, 0, strlen($s) -2);
-        else if(substr($s, -1)=='=') $s = substr($s, 0, strlen($s) -1);
-        return $s;
+        return rtrim(strtr(base64_encode($s), '+/', '-_'), '=');
     }
 
-    public static function unencrypt($s, $alg=null)
+    public static function decrypt($r, $alg=null, $salt=null)
     {
-        return base64_decode($s);
+        if($alg) {
+            // unique random ids per string
+            // this is double-stored in file cache to prevent duplication
+            if($alg==='uuid') {
+                return Cache::get('uuids/'.$r, false, false, true);
+            } else {
+                if(is_null($salt) && !($salt=Cache::get('rnd', false, false, true))) {
+                    return false;
+                }
+                $r = base64_decode(strtr($r, '-_', '+/'));
+                if(function_exists('openssl_encrypt')) {
+                    if($alg===true) $alg = 'AES-256-CFB';
+                    $l = openssl_cipher_iv_length($alg);
+                    $s = openssl_decrypt(substr($r, $l), $alg, $salt, 0, substr($r, 0, $l));
+                } else if(function_exists('mcrypt_encrypt')) {
+                    if($alg===true) $alg = '3DES';
+                    # create a random IV to use with CBC encoding
+                    $l  = mcrypt_get_iv_size($alg, MCRYPT_MODE_CBC);
+                    $s = mcrypt_decrypt($alg, $salt, substr($r, $l), MCRYPT_MODE_CBC, substr($r, 0, $l));
+                    unset($l);
+                }
+                unset($r, $alg, $salt);
+                return $s;
+            }
+        }
+        return base64_decode(strtr($r, '-_', '+/'));
     }
 
     /**

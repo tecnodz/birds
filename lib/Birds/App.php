@@ -30,7 +30,7 @@
 namespace Birds;
 class App
 {
-
+    public static $onStart=array(),$onEnd=array();
     protected $config;
     protected static $request, $response, $instance, $router='Birds\\App\\Route', $running=false;
 
@@ -118,6 +118,10 @@ class App
                 }
             }
         }
+        foreach(self::$onStart as $k=>$s) {
+            App\Content::create($s,null,true);
+            unset(self::$onStart[$k], $k, $s);
+        }
     }
     
 	public function fly($format=null)
@@ -180,6 +184,10 @@ class App
 
     public static function end($exception=false)
     {
+        foreach(self::$onEnd as $k=>$s) {
+            App\Content::create($s,null,true);
+            unset(self::$onEnd[$k], $k, $s);
+        }
         if(!is_null(bird::$session)) {
             // store session
             Cache::set('session/'.Session::$id, bird::$session, Session::$expires);

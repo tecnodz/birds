@@ -56,7 +56,7 @@ class TextHtml
                 ksort($cs);
             }
             foreach($cs as $i=>$c) {
-                $r = \Birds\App\Content::find($c, $format);
+                $r = \Birds\App\Content::create($c, $format);
                 if($r) {
                     $content[$slot][$i] = $r;
                     $content[$slot][$i]->cid = ($route->content && isset($route->content[$slot][$i]))?("r-{$slot}-{$i}"):("l-{$slot}-{$i}");

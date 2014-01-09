@@ -1,7 +1,7 @@
 ---
 language: en
 meta:
-  title: Birds Application Framework
+  title: Birds CMS
   "@language": en
 content:
   body:
@@ -10,6 +10,7 @@ content:
 ---
 language: pt
 meta:
+  title: Birds CMS
   "@language": pt
 content:
   body:

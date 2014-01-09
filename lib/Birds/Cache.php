@@ -78,9 +78,9 @@ class Cache
      * @param $expires int    timestamp to be compared. If timestamp is newer than cached key, false is returned.
      * @param $method  mixed  Storage method to be used. Should be either a key or a value in self::$_methods
      */
-    public static function get($key, $expires=0, $method=null)
+    public static function get($key, $expires=0, $method=null, $fileFallback=false)
     {
-        $cn = '\\Birds\\Cache\\'.ucfirst(self::storage($method));
+        $cn = '\\Birds\\Cache\\'.ucfirst($method=self::storage($method));
         if(is_array($key)) {
             foreach($key as $ckey) {
                 $ret = $cn::get($ckey, $expires);
@@ -93,6 +93,12 @@ class Cache
             if(!isset($ret)) $ret=false;
         } else {
             $ret = $cn::get($key, $expires);
+        }
+        if($fileFallback && $ret===false && $method!='file' && !$expires) {
+            $ret = Cache\File::get($key);
+            if($ret) {
+                self::set($key, $ret);
+            }
         }
         unset($cn, $key, $expires, $method);
         return $ret; 
@@ -107,7 +113,7 @@ class Cache
      * @param $expires int    timestamp to be set as expiration date.
      * @param $method  mixed  Storage method to be used. Should be either a key or a value in self::$_methods
      */
-    public static function set($key, $value, $timeout=0, $method=null)
+    public static function set($key, $value, $timeout=0, $method=null, $fileFallback=false)
     {
         $cn = '\\Birds\\Cache\\'.ucfirst(self::storage($method));
         if(is_array($key)) {
@@ -121,6 +127,9 @@ class Cache
             }
         } else {
             $ret = $cn::set($key, $value, $timeout);
+        }
+        if($fileFallback && $ret===false && $method!='file' && !$expires) {
+            $ret = Cache\File::set($key, $value);
         }
         unset($cn,$key,$value,$timeout,$method);
         return $ret;

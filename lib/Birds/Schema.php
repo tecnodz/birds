@@ -26,7 +26,7 @@
 namespace Birds;
 class Schema {
 
-    public static $defaultItemType='Dataset', $cms;
+    public static $defaultItemType='Dataset', $cms, $schemas=array();
 
     public function __toString()
     {
@@ -42,16 +42,28 @@ class Schema {
     {
         if(property_exists($cn, 'itemtype')) {
             $p = array('itemtype'=>$cn::$itemtype);
+            $s = (property_exists($cn, 'schemaid'))?($cn::$schemaid):(bird::encrypt($cn, 'uuid'));
+            if(!isset(self::$schemas[$s]) && !Cache::get('schema/'.$s)) {
+                App::$onEnd['schema:'.$s]=array(
+                    'class'=>'Birds\Schema',
+                    'method'=>'assign',
+                    'params'=>array($s, $cn),
+                );
+            }
         } else {
+            $s = bird::encrypt($cn, 'uuid');
             $p = array('itemtype'=>self::$defaultItemType);
+        }
+        if(!isset(self::$schemas[$cn])) {
+            self::$schemas[$cn] = $p['itemtype'];
         }
         if(is_null(self::$cms)) {
             self::$cms = \Birds\bird::app()->Birds['cms'];
         }
         if($id && self::$cms) {
-            $cn = (property_exists($cn, 'schemaid'))?($cn::$schemaid):(bird::encrypt($cn));
-            $p['itemid'] = self::$cms.'/'.$cn.'/'.bird::encrypt($id);
+            $p['itemid'] = self::$cms.'/'.$s.'/'.bird::encrypt($id, 'uuid');
         }
+        unset($s);
 
         if(substr($p['itemtype'], 0, 4)!='http') {
             $p['itemtype'] = 'http://schema.org/'.$p['itemtype'];
@@ -78,6 +90,11 @@ class Schema {
         }
         $s .= '>'.$c.'</div>';
         return $s;
+    }
+
+    public static function assign($itemtype, $cn)
+    {
+        \bird::log(__METHOD__, func_get_args());
     }
 
 }
