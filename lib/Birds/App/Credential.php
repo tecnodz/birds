@@ -140,7 +140,8 @@ class Credential
         while(isset($p)) {
             // check if file exists
             foreach($cd as $d) {
-                if(file_exists($f=$d.'/'.$p.'.yml') && $l=self::validateCredential($f, $c)) {
+                if(file_exists($f=$d.'/'.$p.'.yml')) {
+                    $l=self::validateCredential($f, $c);
                     if($l>=$level) {
                         unset($cd, $d, $c, $p, $f, $l);
                         return true;

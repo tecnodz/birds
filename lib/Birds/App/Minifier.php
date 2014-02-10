@@ -50,9 +50,11 @@ class Minifier
             $abs=false;
         }
         if($root && file_exists($f=$root.$url)) {
-        } else if(file_exists($f=\Birds\bird::app()->Birds['document-root'].$url)) {
         } else {
-            $f = \bird::file(\Birds\bird::app()->Birds['routes-dir'], $url);
+            $app = \Birds\bird::app()->Birds;
+            $a = (is_array($app['routes-dir']))?(array_merge(array($app['document-root']), $app['routes-dir'])):(array($app['document-root'], $app['routes-dir']));
+            $f = \bird::file($a, $url, 'r');
+            unset($app, $a);
         }
         return $f;
     }
@@ -163,7 +165,7 @@ class Minifier
             foreach($fs as $i=>$cf) {
                 if(substr($cf, -5)=='.less') {
                     if(!isset($lc)) {
-                        //\bird::log(ini_set('memory_limit', '8M'));
+                        ini_set('memory_limit', '8M');
                         if(!class_exists('lessc')) require_once BIRD_ROOT.'/lib/lessphp/lessc.inc.php';
                         $lc = new \lessc();
                         $lc->setVariables(array('assets-url'=>'"'.self::$assetsUrl.'"'));

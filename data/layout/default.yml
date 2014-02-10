@@ -1,7 +1,7 @@
 ---
 meta:
   title: ~
-  stylesheet: "/_/css/birds.less"
+  stylesheet: "/_/css/site.less"
 slots: [ header, body, nav, footer ]
 content:
   header:

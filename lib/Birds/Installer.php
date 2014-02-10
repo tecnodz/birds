@@ -116,11 +116,17 @@ class Installer
             //echo "Moving framework to new root {$root}\n";
             rename($tmp, self::$root);
             //echo "Creating shell script {$root}\n";
-            bird::save($apps.'/bird', '#!/usr/bin/env php'."\n"
-                . '<'.'?php'."\n"
+            bird::save($apps.'/bird', "#!/usr/bin/env php\n"
+                . '<'."?php\n"
                 . "require_once 'lib/vendor/Birds/bird.php';\n"
                 . "//Birds\Cache::\$memcachedServers=array('db:11211');\n"
                 . "Birds\bird::app()->fly();\n",
+                false, 0777);
+            bird::save($apps.'/bws.sh', "#!/bin/sh\n"
+                . "php -S 0.0.0.0:8080 lib/vendor/Birds/bird.php 2>&1 1>> log/bird.log &\n",
+                false, 0777);
+            bird::save($apps.'/bws.sh', "#!/bin/sh\n"
+                . "php -S 0.0.0.0:8080 -dzend.enable_gc=0 lib/vendor/Birds/bird-debug.php 2>&1 1>> log/bird.log &\n",
                 false, 0777);
             mkdir($apps.'/data/cache', 0777, true);
             mkdir($apps.'/sites', 0777, true);
