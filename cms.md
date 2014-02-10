@@ -32,11 +32,11 @@ websites.
     1.2. Request is parsed and a route is searched for. When a valid route is found, credentials might be 
          requested.
 
-        1.2.1. If web-cache is enabled, it might be checked now.
+    1.2.1. If web-cache is enabled, it might be checked now.
 
-        1.2.3. If a download is in progress, it should be resumed (the same for HTTP streams). 
+    1.2.3. If a download is in progress, it should be resumed (the same for HTTP streams). 
 
-        1.2.2. If authentication is requested, the user is verified --no new cookies should be set at this point.
+    1.2.2. If authentication is requested, the user is verified --no new cookies should be set at this point.
 
 2. The response is rendered.
 
