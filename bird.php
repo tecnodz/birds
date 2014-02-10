@@ -40,7 +40,9 @@ class bird
         $timeout,
         $vars=array(),
         $autoload=null,
-        $session=null;
+        $session=null,
+        $cssPrefix='b-',
+        $signature;
     protected static $_name, $_env='prod', $_site, $_server, $app, $scriptName, $scriptRealName, $urlParam;
 
 	/**
@@ -820,6 +822,49 @@ class bird
         return App\Assets::download($file, $format, $fname, $speed, $attachment, $nocache, $exit);
     }
 
+    public static function isWritable($a1=null, $a2=null)
+    {
+        return self::file($a1, $a2, 'w');
+    }
+    public static function isReadable($a1=null, $a2=null)
+    {
+        return self::file($a1, $a2, 'r');
+    }
+
+    public static function file($a1=null, $a2=null, $mode='r')
+    {
+        if($mode[0]=='w') {
+            $fn='is_writable';
+            $w = true;
+        } else {
+            $fn='is_readable';
+            $w = false;
+        }
+        if(!is_array($a1) && !$a2) {
+            if((file_exists($a1) && $fn($a1)) || ($w && $fn(dirname($a1)))) {
+                unset($fn, $w);
+                return $a1;
+            }
+            unset($fn, $w);
+            return false;
+        }
+        if(!is_array($a1)) $a1=array($a1);
+        if(!is_array($a2)) $a2=array($a2);
+        foreach($a2 as $e) {
+            foreach($a1 as $d) {
+                if(substr($d, -1)!='/') $d .= '/';
+                if(self::file(($f=$d.$e), null, $mode)) {
+                    unset($fn, $w);
+                    return $f;
+                }
+                unset($f, $d);
+            }
+            unset($e);
+        }
+        unset($a1, $a2);
+        return false;
+    }
+
     /**
      * Atomic file update
      *
@@ -965,6 +1010,7 @@ if (!defined('BIRD_VAR')) {
 }
 spl_autoload_register('\Birds\bird::autoload');
 bird::$lang=substr(setlocale(LC_CTYPE, 0),0,2);
+bird::$signature = 'Birds v'.BIRD_VERSION.' <i class="b-icon b-icon-html5" title="HTML5"></i><i class="b-icon b-icon-css3" title="CSS3"></i>';
 setlocale(LC_ALL,'en_US.UTF-8');
 if(realpath($_SERVER['SCRIPT_FILENAME'])==__FILE__) {
     $app = bird::app();

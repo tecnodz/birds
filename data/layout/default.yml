@@ -8,10 +8,11 @@ content:
     0: header
   footer:
     0: footer
+nodes:
+  html:
+    before: '<!DOCTYPE html>'
+  head:
+    prepend: '<meta charset="utf-8" />'
+    append: '<script src="/_/js/modernizr.js"></script><link type="image/x-icon" href="/_/favicon.ico" rel="icon" /><link type="image/x-icon" href="/_/favicon.ico" rel="shortcut" />'
 options:
-  open-tags:
-    html: '<!DOCTYPE html><html>'
-    head: '<head><meta charset="utf-8" />'
-  close-tags:
-    head: '<script src="/_/js/modernizr.js"></script><link type="image/x-icon" href="/_/favicon.ico" rel="icon" /><link type="image/x-icon" href="/_/favicon.ico" rel="shortcut" /></head>'
   body-elements: [ header, nav, footer ]

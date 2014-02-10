@@ -121,10 +121,10 @@ class Route
             $format = $this->formats[0];
             if(!$format) return false;
         }
-        $cf = \bird::camelize($format, true);
         $b = dirname(__FILE__).'/Layout';
-        if(file_exists($b.'/'.($cf = \bird::camelize($format, true)).'.php') || (($cf = \bird::camelize(substr($format, 0, strpos($format, '/')), true)) && strpos($format, '/') && file_exists($b.'/'.$cf.'.php'))) {
+        if(file_exists($b.'/'.($cf = \bird::camelize($format, true)).'.php') || (($p=strpos($format, '/')) && ($cf = \bird::camelize(substr($format, 0, $p), true)) && file_exists($b.'/'.$cf.'.php'))) {
             $cn = 'Birds\\App\\Layout\\'.$cf;
+            unset($p, $cf);
             $cn::render($format, $this);
         } else {
             unset($cf);
@@ -138,22 +138,6 @@ class Route
                 }
             }
         }
-
-        /*
-        \bird::debug(__METHOD__);
-        if((($m='render'.ucfirst(\Birds\bird::camelize($format))) && $m!='render' && method_exists($this, $m)) || (($m='render'.ucfirst(substr($format, 0, strpos($format, '/')))) && $m!='render' && method_exists($this, $m))) {
-            return $this->$m($format);
-        } else {
-            //\Birds\bird::log(__METHOD__.': method '.$m.' does not exist!');
-            return $this->renderAny($format);
-        }
-        //\Birds\App::header('Content-Type: '.$format);
-        // prepare contents
-
-
-        $r = $this->layout->render($format);
-        if(is_string($r)) echo $r;
-        */
     }
 
     public function setFormat($format)
@@ -196,6 +180,12 @@ class Route
 
         // transform any non-slug characters (except /_.) into lower-case ascii
         if(substr($route,0,1)!='/') $route = '/'.$route;
+        $id=null;
+        if($hp=strpos($route, '#')) {
+            $id = substr($route, $hp+1);
+            $route = substr($route, 0, $hp);
+        }
+        unset($hp);
 		$route = urldecode($route);
         if($updateScriptName) \Birds\bird::scriptName($route, false, true);
         if($route=='') $route='/';
@@ -213,11 +203,11 @@ class Route
             $r = self::validateRoute($route, $b.$dir.'.yml', $ext);
             if($r) {
                 self::$current = $route;
-                return $r;
+                break;
             }
             unset($b, $r);
         }
-        if($dir!='/') {
+        if(!isset($r) && $dir!='/') {
             $pd=explode('/', substr($dir,1));
             while(isset($pd[0])) {
                 array_pop($pd);
@@ -225,13 +215,20 @@ class Route
                     $r = self::validateRoute($route, $b.'/'.implode('/',$pd).'.yml', $ext, true);
                     if($r && $r->multiviews) {
                         self::$current = '/'.implode('/',$pd);
-                        if($updateScriptName) \Birds\bird::scriptName(self::$current);
-                        return $r;
+                        unset($pd);
+                        break;
                     }
                     unset($b, $r);
                 }
             }
             unset($pd);
+        }
+        if(isset($r)) {
+            if($updateScriptName) \Birds\bird::scriptName(self::$current);
+            if($id) {
+                return $r->getContent($id);
+            }
+            return $r;
         }
         return false;
 	}
@@ -273,6 +270,19 @@ class Route
         }
         return $r;
 	}
+
+    public function getContent($c)
+    {
+        $p = strrpos($c, '-');
+        $slot = substr($c, 2, $p - 2);
+        $id = substr($c, $p+1);
+        // Content is in route object
+        if(substr($c, 0, 2)=='r-') {
+            return Content::create($this->content[$slot][$id]);
+        } else {
+            return Content::create($this->layout->content[$slot][$id]);
+        }
+    }
 
     /**
      * Supported mime-types

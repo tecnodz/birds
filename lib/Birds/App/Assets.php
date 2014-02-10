@@ -44,29 +44,25 @@ class Assets
         } else {
             $cd = array(\Birds\bird::app()->Birds['document-root'], $cd);
         }
-        foreach($cd as $d) {
+        $f = \bird::file($cd, $url);
+        unset($url, $cd);
+        if($f) {
             // todo: search for urlparameters in file name, like used for optimizing images
-            if(file_exists($f=$d.$url)) {
-                if(is_dir($f)) {
-                    if(file_exists($f=$f.'/index.'.Route::mimeType($format))) {
-                        break;
-                    }
-                } else {
-                    if($p=strrpos($url, '.')) {
-                        $format = Route::mimeType(substr($url, $p+1));
-                    }
-                    break;
+            if(is_dir($f)) {
+                if(!file_exists($f=$f.'/index.'.Route::mimeType($format))) {
+                    $f=false;
+                }
+            } else {
+                if($p=strrpos($f, '.')) {
+                    $format = Route::mimeType(substr($f, $p+1));
                 }
             }
-            unset($d, $f);
-        }
-        unset($url, $cd);
-        if(isset($f)) {
             // optimize
             // add headers
             self::download($f, $format, null, 0, false, false, false);
             \Birds\App::end();
         } else {
+            unset($f);
             throw new \Birds\App\HttpException(404);
         }
     }

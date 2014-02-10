@@ -142,6 +142,19 @@ class Yaml
     }
 
     /**
+     * Saves YAML file
+     *
+     * @param string $s file name
+     * @param mixed $a arguments to be converted to YAML
+     * 
+     * @return array contents of the YAML text
+     */
+    public static function save($s, $a, $indent=2, $wordwrap=80, $mask=0666)
+    {
+        return bird::save($s, self::dump($a, $indent, $wordwrap), true, $mask);
+    }
+
+    /**
      * Dumps YAML content from params
      *
      * @param mixed $a arguments to be converted to YAML
@@ -154,7 +167,7 @@ class Yaml
         if($parser=='php-yaml') {
             ini_set('yaml.output_indent', $indent);
             ini_set('yaml.output_width', $wordwrap);
-            return yaml_emit($s);
+            return yaml_emit($a);
         } else {
             return \Spyc::YAMLDump($a, $indent, $wordwrap);
         }

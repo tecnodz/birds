@@ -93,9 +93,39 @@ class Credential
         return $credential;
     }
 
+    /**
+     * Checks if user has the required credentials
+     * 
+     * Credentials can be set globally or per class name and primary key
+     * 
+     * Credential levels are:
+     *
+     * 1: Reader level, cannot commit any changes
+     * 2: Contributor level, can make its own revisions, but they need to be approved before 
+     *    they are implemented
+     * 3: Editor level, may update the objects directly, can also see other contributor revisions
+     *    and approve them
+     * 4: Owner level, has full read/write access to the resource
+     * 5: Administrator level, can assign other credentials
+     *
+     * Each level should be able to assign credentials one level lower than its own level, starting
+     * on level 3 (Administrators may set other administrators as well)
+     *
+     * Credentials are stored on credentials-dir as Yaml files. Base credentials can be checked on .yml file
+     *
+     * @param string    $cn         class name to be checked
+     * @param mixed     $id         primary key of the object to be checked
+     * @param int       $level      credential level that needs to be checked, if user actual credentials are returned
+     * @param bool      $exception  whether an exception should be returned if credential check fails
+     *
+     * @return mixed    true on success, actual credential level if fails (it should be a number from 1-4)
+     */
     public static function check($cn=null, $id=null, $level=9, $exception=false)
     {
         if($level==0) return true;
+        if(is_array($id)) {
+            $id = implode('.', $id);
+        }
         if($cn) {
             $p=str_replace('\\', '.', $cn);
             if($id) {

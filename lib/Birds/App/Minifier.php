@@ -51,27 +51,10 @@ class Minifier
         }
         if($root && file_exists($f=$root.$url)) {
         } else if(file_exists($f=\Birds\bird::app()->Birds['document-root'].$url)) {
-        } else if(is_array($d=\Birds\bird::app()->Birds['routes-dir'])) {
-            unset($f);
-            foreach($d as $dn) {
-                if(file_exists($f=$dn.$url)) {
-                    unset($dn);
-                    break;
-                }
-                unset($dn, $f);
-            }
-            unset($d);
-        } else if(file_exists($f=$d.$url)) {
-            unset($d);
         } else {
-            unset($f);
+            $f = \bird::file(\Birds\bird::app()->Birds['routes-dir'], $url);
         }
-
-        if(isset($f)) {
-            return $f;
-        }
-
-        return false;
+        return $f;
     }
 
     /**
@@ -139,24 +122,14 @@ class Minifier
                     $fn = self::file(self::$assetsUrl.'/'.$f);
                     if(!$fn || filemtime($fn)<max(${$type})) { // generate
                         if(!$fn) {
-                            if(!is_writable($fn=\Birds\bird::app()->Birds['document-root'].self::$assetsUrl.'/'.$f) && !is_writable(dirname($fn))) {
-                                $cd  = \Birds\bird::app()->Birds['routes-dir'];
-                                if(is_array($cd)) {
-                                    foreach($cd as $d) {
-                                        if(is_dir($d.self::$assetsUrl) && is_writable($fn=$d.self::$assetsUrl.'/'.$f)) {
-                                            unset($d);
-                                            break;
-                                        }
-                                        unset($d);
-                                    }
-                                } else {
-                                    $fn = $cd.self::$assetsUrl.'/'.$f;
-                                }
-                                unset($cd);
+                            if (!($fn=\bird::isWritable(\Birds\bird::app()->Birds['document-root'].self::$assetsUrl.'/'.$f))
+                             && !($fn=\bird::isWritable(\Birds\bird::app()->Birds['routes-dir'], self::$assetsUrl.'/'.$f))
+                            ) {
+                                // cannot combine...
                             }
+                        } else {
+                            self::combine(array_keys(${$type}), $fn, $type, $compress);
                         }
-                        $fs=array_keys(${$type});
-                        self::combine(array_keys(${$type}), $fn, $type, $compress);
                     }
 
                     if($raw) {
@@ -190,7 +163,7 @@ class Minifier
             foreach($fs as $i=>$cf) {
                 if(substr($cf, -5)=='.less') {
                     if(!isset($lc)) {
-                        \bird::log(ini_set('memory_limit', '8M'));
+                        //\bird::log(ini_set('memory_limit', '8M'));
                         if(!class_exists('lessc')) require_once BIRD_ROOT.'/lib/lessphp/lessc.inc.php';
                         $lc = new \lessc();
                         $lc->setVariables(array('assets-url'=>'"'.self::$assetsUrl.'"'));

@@ -37,8 +37,9 @@ class Layout
         $meta,
         $slots,
         $content,
-        $openTags=array(),
-        $closeTags=array(),
+        $nodes,
+        //$openTags=array(),
+        //$closeTags=array(),
         $bodyElements=array(),
         $jsOnTop=false;
     /**
@@ -77,25 +78,10 @@ class Layout
             return new $l();
         }
         if(!file_exists($l)) {
-            $ld = \Birds\bird::app()->Birds['layout-dir'];
-            if(is_array($ld)) {
-                foreach($ld as $dir) {
-                    if(file_exists($f=$dir.'/'.$l)) {
-                        unset($dir);
-                        break;
-                    }
-                    unset($dir, $f);
-                }
-            } else if(file_exists($f=$ld.'/'.$l)) {
-            } else {
-                unset($f);
-            }
-            if(!isset($f)) {
+            $l = \bird::file(\Birds\bird::app()->Birds['layout-dir'], $l);
+            if(!$l) {
                 return new Layout();
             }
-            unset($ld);
-            $l = $f;
-            unset($f);
         }
         if(substr($l, -4)=='.yml') {
             return \Birds\Yaml::read($l, 3600, null, '\\Birds\\App\\Layout');

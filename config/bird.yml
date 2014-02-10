@@ -6,9 +6,9 @@ all:
     languages: "[ en, pt ]"
     language: ~
     routes-dir:  "$BIRD_SITE_ROOT/data/web:$BIRD_APP_ROOT/data/web:$BIRD_ROOT/data/web"
-    content-dir: "$BIRD_SITE_ROOT/data/content:$BIRD_APP_ROOT/data/content:$BIRD_ROOT/data/content"
     layout-dir:  "$BIRD_SITE_ROOT/data/layout:$BIRD_APP_ROOT/data/layout:$BIRD_ROOT/data/layout"
-    model-dir:  "$BIRD_SITE_ROOT/data/model:$BIRD_APP_ROOT/data/model:$BIRD_ROOT/data/model"
+    content-dir: "$BIRD_SITE_ROOT/data/content:$BIRD_APP_ROOT/data/content:$BIRD_ROOT/data/content"
+    schema-dir:  "$BIRD_SITE_ROOT/data/schema:$BIRD_APP_ROOT/data/schema:$BIRD_ROOT/data/schema"
     credential-dir:  "$BIRD_SITE_ROOT/data/credential:$BIRD_APP_ROOT/data/credential:$BIRD_ROOT/data/credential"
     assets-url: "/_"
     cms: '/_b'

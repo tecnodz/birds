@@ -30,9 +30,9 @@
 namespace Birds;
 class App
 {
-    public static $onStart=array(),$onEnd=array();
+    public static $onStart=array(),$onEnd=array(), $response;
     protected $config;
-    protected static $request, $response, $instance, $router='Birds\\App\\Route', $running=false;
+    protected static $request, $instance, $running=false;
 
 	public function __construct()
 	{
@@ -132,16 +132,13 @@ class App
             bird::log('Don\t know where to go -- please set Birds->routes-dir');
             $this->error(404);
         }
-        self::$response=&bird::$vars;
-        self::$response+=array('headers'=>array(),'variables'=>array());
-        if(isset($this->config['Birds']['response'])) {
-            self::$response += $this->config['Birds']['response'];
-        }
+        self::$response=null;
+        self::$request=null;
+
         if(isset($this->config['Birds']['language']) && $this->config['Birds']['language']) bird::$lang=$this->config['Birds']['language'];
         else if(isset($this->config['Birds']['languages'])) bird::$lang=self::language($this->config['Birds']['languages']);
         //set_error_handler(array('bird', 'log'));
 
-        self::$request=null;
         $req = self::request();
         try {
             App\Route::setBase($this->config['Birds']['routes-dir']);
@@ -263,15 +260,9 @@ class App
      * 
      * @return bool
      */
-    public static function response()
+    public static function response(&$r=null)
     {
-        $a = func_get_args();
-        $an = count($a);
-        if ($an==2 && !is_array($a[0])) {
-            self::$response[$a[0]]=$a[1];
-        } else if($an==1 && is_array($a[0])) {
-            self::$response = bird::mergeRecursive($a[0], self::$response);
-        }
+        if(!is_null($r)) self::$response =& $r;
         return self::$response;
     }
 
@@ -294,17 +285,19 @@ class App
     /**
      * Output handler: this should manage if the output should be buffered or not.
      */
-    public static function output($s)
+    public static function output($s, $end=false)
     {
         echo $s;
+        if($end) throw new App\HttpException(200);
     }
 
     /**
      * Output handler: this should manage if the output should be buffered or not.
      */
-    public static function outputFile($s)
+    public static function outputFile($s, $end=false)
     {
         echo file_get_contents($s);
+        if($end) throw new App\HttpException(200);
     }
 
     /**
@@ -437,4 +430,3 @@ class App
     }
 
 }
-

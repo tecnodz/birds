@@ -7,6 +7,11 @@ meta:
   title: Birds Content Management System
   "@language": en
 content:
+  header:
+    -
+      class: Birds\App\Cms
+      method: header
+      prepare: true
   body:
     -
       class: Birds\App\Cms
