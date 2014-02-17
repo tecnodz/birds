@@ -186,27 +186,38 @@ class bird
     {
         if(!is_null($site)) self::$_site=$site;
         else if(is_null(self::$_site)) {
-            if(isset($_SERVER['HTTP_X_HOST'])) {
-                $host=preg_replace('/[^a-z0-9\-\.]+/', '', strtolower($_SERVER['HTTP_X_HOST']));
-            } else if(isset($_SERVER['HTTP_HOST'])) {
-                $host=$_SERVER['HTTP_HOST'];
-            } else {
-                $host='localhost';
+            if(BIRD_CLI) {
+                foreach($_SERVER['argv'] as $v) {
+                    if(substr($v, 0, 7)=='--site=') {
+                        self::$_site = preg_replace('/[^a-z0-9\-\.]+/i', '', substr($v, 7));
+                        break;
+                    }
+                    unset($v);
+                }
             }
-            if($p=strpos($host, ':')) {
-                $host = substr($host, 0, $p);
+            if(is_null(self::$_site)) {
+                if(isset($_SERVER['HTTP_X_HOST'])) {
+                    $host=preg_replace('/[^a-z0-9\-\.]+/', '', strtolower($_SERVER['HTTP_X_HOST']));
+                } else if(isset($_SERVER['HTTP_HOST'])) {
+                    $host=$_SERVER['HTTP_HOST'];
+                } else {
+                    $host='localhost';
+                }
+                if($p=strpos($host, ':')) {
+                    $host = substr($host, 0, $p);
+                }
+                if(file_exists(BIRD_APP_ROOT.'/config/sites/'.$host.'.txt')
+                    || (($p=strpos($host, '.'))!==false && file_exists(BIRD_APP_ROOT.'/config/sites/'.($host=substr($host,$p+1)).'.txt'))
+                ) {
+                    @list($site) = file(BIRD_APP_ROOT.'/config/sites/'.$host.'.txt');
+                }
+                if($site) {
+                    self::$_site = preg_replace('/[^a-z0-9\-\.]+/', '', strtolower($site));
+                } else {
+                    self::$_site = '';
+                }
+                unset($host, $site, $p);
             }
-            if(file_exists(BIRD_APP_ROOT.'/config/sites/'.$host.'.txt')
-                || (($p=strpos($host, '.'))!==false && file_exists(BIRD_APP_ROOT.'/config/sites/'.($host=substr($host,$p+1)).'.txt'))
-            ) {
-                @list($site) = file(BIRD_APP_ROOT.'/config/sites/'.$host.'.txt');
-            }
-            if($site) {
-                self::$_site = preg_replace('/[^a-z0-9\-\.]+/', '', strtolower($site));
-            } else {
-                self::$_site = '';
-            }
-            unset($host, $site, $p);
         }
         if (!defined('BIRD_SITE_ROOT')) {
             define('BIRD_SITE_ROOT', (is_dir(BIRD_APP_ROOT.'/sites/'.self::$_site))?(BIRD_APP_ROOT.'/sites/'.self::$_site):(BIRD_APP_ROOT));
@@ -463,6 +474,21 @@ class bird
             $scheme = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']=='on')||(isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO']=='https')) ? ('https') : ('http');
             @header("Location: {$scheme}://{$_SERVER['HTTP_HOST']}{$url}", true, 301);
             self::output("<html><head><meta http-equiv=\"Refresh\" content=\"0;URL={$scheme}://{$_SERVER['HTTP_HOST']}{$url}\"></head><body><body></html>");
+        }
+    }
+
+    public static function t($s, $t=null, $r=null, $from=null, $to=null)
+    {
+        // translate $s
+        if(!is_null($r)) {
+            if(is_array($r)) {
+                array_unshift($r, $s);
+                return call_user_func_array('sprintf', $r);
+            } else {
+                return sprintf($s, $r);
+            }
+        } else {
+            return $r;
         }
     }
 
@@ -933,7 +959,7 @@ class bird
     {
         $f=false;
         $c = str_replace(array('_', '\\'), '/', $cn);
-        if (!(file_exists($f=BIRD_ROOT."/lib/{$c}.php") || (strpos($c, '/')===false && file_exists($f=BIRD_ROOT."/lib/{$c}/{$c}.php")) || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.php") || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.class.php") || (strpos($c, '/')===false && file_exists($f=BIRD_APP_ROOT."/lib/{$c}/{$c}.php")))) {
+        if (!(file_exists($f=BIRD_ROOT."/lib/{$c}.php") || (strpos($c, '/')===false && file_exists($f=BIRD_ROOT."/lib/{$c}/{$c}.php")) || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.php") || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.class.php") || (strpos($c, '/')===false && file_exists($f=BIRD_APP_ROOT."/lib/{$c}/{$c}.php")) || (defined('BIRD_SITE_ROOT') && file_exists($f=BIRD_SITE_ROOT."/lib/{$c}.php")))) {
             foreach(self::$lib as $libi=>$dir) {
                 if(substr($dir, -1)=='/') self::$lib[$libi]=substr($dir, 0, strlen($dir)-1);
                 if(!(file_exists($f=$dir.'/'.$c.'.php') || file_exists($f=$dir.'/'.$c.'.class.php'))) $f=false;
@@ -974,6 +1000,12 @@ class bird
                 unset($k, $v);
             }
             unset(self::$autoload[$cn]);
+        }
+        if(defined('BIRD_SITE_ROOT') && file_exists($c=BIRD_SITE_ROOT.'/config/autoload.'.str_replace('\\', '_', $cn).'.ini')) {
+            foreach(parse_ini_file($c) as $k=>$v) {
+                $cn::$$k = (!is_array($v) && $v[0]=='{')?(json_decode($v, true)):($v);
+                unset($k, $v);
+            }
         }
     }
 }

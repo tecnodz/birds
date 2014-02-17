@@ -24,13 +24,27 @@
  * @link      http://tecnodz.com/
  */
 namespace Birds;
-class Schema {
+class Schema extends Data
+{
 
     public static $defaultItemType='Dataset', $cms, $schemas=array();
+    protected static $instances=array();
+    public $instance, $class, $table, $columns, $relations, $scope;
 
     public function __toString()
     {
         bird::debug((array)$this);
+    }
+
+    public function getScope($n='')
+    {
+        if($n && isset($this->scope) && isset($this->scope[$n])) {
+            return $this->scope[$n];
+        } else if(isset($this->columns)) {
+            return array_keys($this->columns);
+        } else {
+            return array();
+        }
     }
 
     public static function create($cn, $id=null)
@@ -128,19 +142,57 @@ class Schema {
         }
     }
 
-    public static function load($s)
+    public static function load($s, $build=false, $prop=null)
     {
-        if($f=Cache::get('schema/'.$s)) {
-            return Yaml::read($f);
-        } else if(class_exists($s)) {
-            $s = (property_exists($s, 'schemaid'))?($s::$schemaid):(str_replace(array('\\', '/'), '.', $s));
-            $f = \bird::isReadable(bird::app()->Birds['schema-dir'], $s.'.yml');
-            unset($s);
-            if($f) {
-                return Yaml::read($f);
+        if(!isset(self::$instances[$s])) {
+            $cn = get_called_class();
+            if(($f=Cache::get('schema/'.$s)) && file_exists($f)) {
+                self::$instances[$s] = Yaml::read($f, null, null, $cn);
+                unset($f);
+            } else if(class_exists($s)) {
+                $sc = (property_exists($s, 'schemaid'))?($s::$schemaid):(str_replace(array('\\', '/'), '.', $s));
+                $d = bird::app()->Birds['schema-dir'];
+                $f = \bird::isReadable($d, $sc.'.yml');
+                if($f) {
+                    Cache::set('schema/'.$s, $f);
+                    self::$instances[$s] = Yaml::read($f, null, null, $cn);
+                } else if($build && ($f=\bird::isWritable($d, $sc.'.yml')) && ($r=Schema\Builder::load($sc, $f))) {
+                    Cache::set('schema/'.$s, $f);
+                    self::$instances[$s] = $r;
+                }
+                unset($sc, $d, $f);
             }
+            if(!isset(self::$instances[$s])) {
+                \bird::log("Could not load schema for {$s}, sending a blank one");
+                self::$instances[$s] = new Schema();
+            // prevent memory leaks?
+            /*
+            } else {
+                if(self::$instances[$s]->instance && self::$instances[$s]->instance!=$s && isset(self::$instances[self::$instances[$s]->instance])) {
+                    unset(self::$instances[self::$instances[$s]->instance]);
+                }
+            */
+            }
+            self::$instances[$s]->instance = $s;
+        }
+        if(!is_null($prop)) {
+            return (isset(self::$instances[$s]->$prop))?(self::$instances[$s]->$prop):(null);
+        }
+        return self::$instances[$s];
+    }
+
+    public function unload($s)
+    {
+        if(isset(self::$instances[$s])) {
+            unset(self::$instances[$s]);
+            return true;
         }
         return false;
     }
-
+    /*
+    public function __destruct()
+    {
+        self::unload($this->instance);
+    }
+    */
 }

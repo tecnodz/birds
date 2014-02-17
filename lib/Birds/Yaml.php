@@ -30,6 +30,7 @@
 namespace Birds;
 class Yaml
 {
+    public static $timeout=3600;
     /**
      * Defines/sets current Yaml parser according to self::$parsers
      */
@@ -50,9 +51,10 @@ class Yaml
      * 
      * @return array contents of the YAML text
      */
-    public static function read($s, $timeout=3600, $filter=null, $cn=null)
+    public static function read($s, $timeout=null, $filter=null, $cn=null)
     {
         if(!is_string($s) || !file_exists($s) || filesize($s)<2) return false;
+
         $readTimeout = filemtime($s);
         $ckey = 'yaml/'.(($cn)?(str_replace('\\', '_', $cn).'-'):('')).md5($s.((is_array($filter))?(':'.serialize($filter)):('')));
         $a = Cache::get($ckey, $readTimeout);
@@ -92,6 +94,7 @@ class Yaml
         if($cn && class_exists($cn)) {
             $a = new $cn($a);
         }
+        if(is_null($timeout)) $timeout = self::$timeout;
         Cache::set($ckey, $a, $timeout);
         unset($readTimeout, $ckey, $parser);
         return $a;
@@ -104,9 +107,10 @@ class Yaml
      * 
      * @return array contents of the YAML text
      */
-    public static function parse($s, $timeout=3600)
+    public static function parse($s, $timeout=null)
     {
         $ckey = 'yaml/'.md5($s);
+        if(is_null($timeout)) $timeout = self::$timeout;
         $a = Cache::get($ckey, $timeout);
         if ($a) {
             unset($ckey);
@@ -131,9 +135,10 @@ class Yaml
      * 
      * @return array contents of the YAML text
      */
-    public static function load($s, $timeout=3600)
+    public static function load($s, $timeout=null)
     {
         if(is_array($s)) return false;
+        if(is_null($timeout)) $timeout = self::$timeout;
         if(strlen($s)<255 && file_exists($s)) {
             return self::read($s, $timeout);
         } else {
@@ -180,7 +185,7 @@ class Yaml
      * 
      * @return array contents of the YAML text
      */
-    public static function append($s, $arg, $timeout=1800)
+    public static function append($s, $arg, $timeout=null)
     {
         $text = $arg;
         if(is_array($arg)) {
@@ -192,8 +197,10 @@ class Yaml
         $a = bird::mergeRecursive($yaml, $arg);
         if($a!=$yaml) {
             $ckey = 'yaml/'.md5($s);
+            if(is_null($timeout)) $timeout = self::$timeout;
             Cache::set($ckey, $a, $timeout);
             file_put_contents($s, $text, FILE_APPEND);
+            unset($timeout, $s, $text, $yaml, $ckey);
         }
         return $a;
     }

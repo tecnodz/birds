@@ -79,7 +79,12 @@ class Content
 
     public function __toString()
     {
-        return (string) $this->render();
+        try {
+            return (string) $this->render();
+        } catch(\Exception $e) {
+            \bird::log(__METHOD__.': '.$e->getMessage());
+            return '';
+        }
     }
 
     /**
@@ -106,13 +111,19 @@ class Content
         else if(!is_array($d)) return false;
         try {
             if(isset($d['class']) && $d['class']) {
-                if(class_exists('\\'.$d['class'])) {
-                    $cn = '\\'.$d['class'];
-                    $static = true;
-                    if(isset($d['uid'])) {
-                        $cn = $cn::find($d['uid']);
-                        if(!$cn) return false;
+                if(is_object($d['class']) || class_exists('\\'.$d['class'])) {
+                    if(is_object($d['class'])) {
+                        $cn = $d['class'];
+                        unset($d['class']);
                         $static = false;
+                    } else {
+                        $cn = '\\'.$d['class'];
+                        $static = true;
+                        if(isset($d['uid'])) {
+                            $cn = $cn::find($d['uid']);
+                            if(!$cn) return false;
+                            $static = false;
+                        }
                     }
                     if(isset($d['method']) && $d['method']) {
                         if($d['method'][0]=='$') {
