@@ -47,6 +47,11 @@ class User {
         return (isset(bird::$session['uid']))?(bird::$session['uid']):(false);
     }
 
+    public static function render()
+    {
+        return self::SingleSignOnComponent();
+    }
+
     /**
      * SingleSignOnComponent
      * 

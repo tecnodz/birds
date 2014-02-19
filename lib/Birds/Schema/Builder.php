@@ -19,19 +19,24 @@ class Builder
 {
     public static $prefix, $namespace, $lib, $category, $package, $author, $copyright, $license, $version, $link;
 
-    public static function load($t, $f=null, $conn=null)
+    public static function load($t, $f=null, $n=null)
     {
-        if(is_null($conn)) {
+        if(is_null($n)) {
             $dbs = \bird::app()->Data;
-            foreach($dbs as $cn=>$o) {
-                $conn = \Birds\Data::connect($cn, $o);
-                if($s = $conn->getSchema($t, array('class'=>self::className($t), 'connection'=>$cn))) {
+            foreach($dbs as $n=>$a) {
+                $cn = 'Birds\\Data\\'.ucfirst(substr($a['dsn'], 0, strpos($a['dsn'], ':'))).'Schema';
+                if($s = $cn::load($n, $t, array('class'=>self::className($t), 'connection'=>$n))) {
                     break;
                 }
-                unset($cn, $o, $conn, $s);
+                unset($cn, $o, $n, $s);
             }
         } else {
-            $s = $conn->getSchema($t, array('class'=>self::className($t), 'connection'=>(string) $conn));
+            $a = \bird::app()->Data[$n];
+            $cn = 'Birds\\Data\\'.ucfirst(substr($a['dsn'], 0, strpos($a['dsn'], ':'))).'Schema';
+            $s = $cn::load($n, $t, array('class'=>self::className($t), 'connection'=>$n));
+        }
+        if(!$s) {
+            \bird::debug(__METHOD__, $cn, $t);
         }
         if($f===true) {
             $f = \bird::isWritable(\bird::app()->Birds['schema-dir'], $t.'.yml');

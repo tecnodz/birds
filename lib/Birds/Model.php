@@ -36,7 +36,10 @@ class Model extends Data
     public static function catalog($format='text/html', $scope=null)
     {
         $cn = get_called_class();
-        $o = (!is_null($scope))?(array('scope'=>$scope)):(null);
+        $o = Schema::load($cn, false, 'active-data');
+
+        if(!$o) $o = array();
+        if(!is_null($scope)) $o['scope'] = $scope;
         return implode('', $cn::find($o)->fetch());
     }
 
@@ -50,6 +53,12 @@ class Model extends Data
         }
         $s .= '</dl>';
         return $s;
+    }
+
+    public static function create($o=array())
+    {
+        $cn = get_called_class();
+        return new $cn($o);
     }
 
     public static function find($o=array())
@@ -67,6 +76,7 @@ class Model extends Data
         if($this->_del) return false;
         else if(!is_null($new)) {
             $this->_new = $new;
+            return $this;
         } else if(is_null($this->_new)) {
             $this->_new = (implode('', $this->asArray('primary'))!=='')?(false):(true);
         }
@@ -120,12 +130,12 @@ class Model extends Data
                 }
             }
             // commit transaction
-            $H->commit($trans, true);
+            if($trans!==false) $H->commit($trans, true);
 
         } catch(Exception $e) {
             \bird::debug(__METHOD__, $e->getMessage());
             // rollback transaction
-            $H->rollback($trans, false);
+            if($trans!==false) $H->rollback($trans, false);
             return false;
         }
         return true;
@@ -135,9 +145,14 @@ class Model extends Data
     {
         $E = $this->schema('events');
         if(!$E || !isset($E[$e])) return true;
-        $c = App\Content::create($E[$e] + array('class'=>$this, 'prepare'=>true));
-        $r = ($c->content!==false)?(true):(false);
-        unset($c->class, $c);
+        foreach($E[$e] as $m=>$c) {
+            if(!isset($c['method'])) $c['method'] = $m;
+            $c += array('class'=>$this, 'prepare'=>true);
+            $c = App\Content::create($c);
+            $r = ($c->content!==false)?(true):(false);
+            unset($c->class, $c);
+            if(!$r) break;
+        }
         return $r;
     }
 

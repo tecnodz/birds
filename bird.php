@@ -960,14 +960,18 @@ class bird
         $f=false;
         $c = str_replace(array('_', '\\'), '/', $cn);
         if (!(file_exists($f=BIRD_ROOT."/lib/{$c}.php") || (strpos($c, '/')===false && file_exists($f=BIRD_ROOT."/lib/{$c}/{$c}.php")) || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.php") || file_exists($f=BIRD_APP_ROOT."/lib/{$c}.class.php") || (strpos($c, '/')===false && file_exists($f=BIRD_APP_ROOT."/lib/{$c}/{$c}.php")) || (defined('BIRD_SITE_ROOT') && file_exists($f=BIRD_SITE_ROOT."/lib/{$c}.php")))) {
+            unset($f);
             foreach(self::$lib as $libi=>$dir) {
                 if(substr($dir, -1)=='/') self::$lib[$libi]=substr($dir, 0, strlen($dir)-1);
-                if(!(file_exists($f=$dir.'/'.$c.'.php') || file_exists($f=$dir.'/'.$c.'.class.php'))) $f=false;
-                unset($libi,$dir);
+                if(file_exists($f=$dir.'/'.$c.'.php') || file_exists($f=$dir.'/'.$c.'.class.php')) {
+                    unset($libi,$dir);
+                    break;
+                }
+                unset($libi,$dir, $f);
             }
         }
         unset($c);
-        if($f) {
+        if(isset($f)) {
             if($l) {
                 @include_once $f;
                 self::autoloadParams($cn);

@@ -17,7 +17,7 @@ class Sql
 {
     public static $microseconds=6;
     protected static $options, $conn=array();
-    protected $_schema, $_select, $_distinct, $_from, $_where, $_groupBy, $_orderBy, $_limit, $_offset, $_alias, $_transaction;
+    protected $_schema, $_scope, $_select, $_distinct, $_from, $_where, $_groupBy, $_orderBy, $_limit, $_offset, $_alias, $_transaction;
 
     public function __construct($s=null)
     {
@@ -36,9 +36,8 @@ class Sql
         return (string) $this->name;
     }
 
-    public function connect($exception=true)
+    public static function connect($n='', $exception=true)
     {
-        $n = $this->schema('connection');
         $cn = get_called_class();
         if(!isset($cn::$conn[$n]) || !$cn::$conn[$n]) {
             try {
@@ -72,9 +71,10 @@ class Sql
     }
     */
 
-    public function getTables()
+    public static function getTables($n='')
     {
-        return $this->query('show tables', \PDO::FETCH_COLUMN);
+        if(is_string($n)) $n = self::connect($n);
+        return $n->query('show tables')->fetchAll(\PDO::FETCH_COLUMN);
     }
 
 
@@ -125,12 +125,14 @@ class Sql
     public function fetch($i=null)
     {
         if(!$this->_schema) return false;
+        $prop = array('_new'=>false);
+        if($this->_scope) $prop['_scope'] = $this->_scope;
         if(!is_null($i)) {
             $this->_offset = $i;
             $this->_limit = 1;
-            return array_shift($this->query($this->buildQuery(), \PDO::FETCH_CLASS, $this->schema('class')));
+            return array_shift($this->query($this->buildQuery(), \PDO::FETCH_CLASS, $this->schema('class'), array($prop)));
         }
-        return $this->query($this->buildQuery(), \PDO::FETCH_CLASS, $this->schema('class'), array('_schema'=>'loja'));
+        return $this->query($this->buildQuery(), \PDO::FETCH_CLASS, $this->schema('class'), array($prop));
     }
 
     public function count($column='1')
@@ -166,6 +168,7 @@ class Sql
             }
         } else {
             $this->addSelect($this->schema()->getScope($o));
+            $this->_scope = $o;
         }
         return $this;
     }
@@ -486,13 +489,17 @@ class Sql
 
     public function run($q)
     {
-        \bird::log(__METHOD__.': '.$q);
+        return self::runStatic($this->schema('connection'), $q);
+    }
+
+    public static function runStatic($n, $q)
+    {
         static $stmt;
         if($stmt) {
             $stmt->closeCursor();
             $stmt = null;
         }
-        $stmt = $this->connect()->query($q);
+        $stmt = self::connect($n)->query($q);
         if(!$stmt) throw new \Exception('Statement failed! '.$q);
         return $stmt;
     }
@@ -561,7 +568,7 @@ class Sql
         // check if there's a current transaction
         // replace current transaction?
         // multiple transactions?
-        $conn = $this->connect();
+        $conn = self::connect($this->schema('connection'));
         $conn->setAttribute(\PDO::ATTR_AUTOCOMMIT, 0);
         $this->_transaction = $conn->beginTransaction();
         unset($conn);
@@ -571,7 +578,7 @@ class Sql
     public function commit($id=null)
     {
         if(!$this->_transaction) return false;
-        $conn = $this->connect();
+        $conn = self::connect($this->schema('connection'));
         if($conn->inTransaction() && $conn->commit()===false){//  && !$conn->getAttribute(PDO::ATTR_AUTOCOMMIT)
             return false;
         } else {
@@ -585,7 +592,7 @@ class Sql
     public function rollback($id=null)
     {
         if(!$trans) return false;
-        $conn = $this->connect();
+        $conn = self::connect($this->schema('connection'));
         $conn->rollBack();
         $conn->setAttribute(\PDO::ATTR_AUTOCOMMIT, 1);
         unset($conn);
@@ -604,11 +611,23 @@ class Sql
             unset($f);
         }
         $tn = $schema->table;
-        unset($fs, $schema);
         if($vs) {
-            return $this->run("insert into {$tn} (".implode(', ', array_keys($vs)).') values ('.implode(', ', $vs).')');
+            $this->run("insert into {$tn} (".implode(', ', array_keys($vs)).') values ('.implode(', ', $vs).')');
+            $pks = $schema->getScope('primary');
+            if($pks) {
+                $insertId = self::connect($schema->connection)->lastInsertId();
+                foreach($pks as $fn) {
+                    if(is_null($o->$fn)) {
+                        $o->$fn = $insertId;
+                    }
+                    unset($fn);
+                }
+            }
+            unset($pks);
+            $o->isNew(false);
         }
-        return false;
+        unset($fs, $schema);
+        return !$o->isNew();
     }
 
     public function update($o)

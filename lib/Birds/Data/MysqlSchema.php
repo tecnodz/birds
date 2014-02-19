@@ -15,11 +15,15 @@
 namespace Birds\Data;
 class MysqlSchema
 {
-    public static function load($d, $tn, $schema=array())
+    public static function load($n, $tn, $schema=array())
     {
-        if(!($tdesc = $d->query('show full columns from '.$tn)) || count($tdesc)==0) {
+        try {
+            $tdesc = \Birds\Data\Sql::runStatic($n, 'show full columns from '.$tn)->fetchAll(\PDO::FETCH_ASSOC);
+        } catch(Exception $e) {
             return false;
         }
+        if(!$tdesc || count($tdesc)==0) return false;
+
         if(!isset($schema['class'])) $schema['class']='';
         $schema['table'] = $tn;
         $schema['columns'] = array();
@@ -32,7 +36,7 @@ class MysqlSchema
             unset($fd);
         }
         $schema['class'] = \Birds\Schema\Builder::className($tn, $schema);
-        $schema = self::parseRelations($d, $schema);
+        $schema = self::parseRelations($n, $schema);
         return $schema;
     }
 
@@ -101,10 +105,14 @@ class MysqlSchema
 
     
     
-    public static function parseRelations($d, $s=array())
+    public static function parseRelations($n, $s=array())
     {
         $tn = $s['table'];
-        $rels = $d->query("select constraint_name as fk, ordinal_position as pos, table_name as tn, column_name as f, referenced_table_name as ref, referenced_column_name as ref_f from information_schema.key_column_usage where table_schema=database() and referenced_table_name is not null and (table_name='{$tn}' or referenced_table_name='{$tn}') order by 2, 1");
+        try {
+            $rels = \Birds\Data\Sql::runStatic($n, "select constraint_name as fk, ordinal_position as pos, table_name as tn, column_name as f, referenced_table_name as ref, referenced_column_name as ref_f from information_schema.key_column_usage where table_schema=database() and referenced_table_name is not null and (table_name='{$tn}' or referenced_table_name='{$tn}') order by 2, 1")->fetchAll(\PDO::FETCH_ASSOC);
+        } catch(Exception $e) {
+            return $s;
+        }
         if(!$rels) return $s;
         if(!isset($s['relations'])) $s['relations'] = array();
         foreach ($rels as $rel) {

@@ -46,27 +46,38 @@ class App
         unset($cfg);
         foreach($this->config['Birds'] as $k=>$v) {
             if(substr($k, -4)=='-dir' || $k=='document-root') {
+                $w = strpos($v, '*');
                 if(strpos($v, ':')!==false) {
                     $pv=explode(':', $v);
-                    $v=array();
-                    foreach($pv as $vk=>$vv) {
-                        $vv = (substr($vv, 0, 1)!='/')?(realpath(BIRD_APP_ROOT.'/'.$vv)):(realpath($vv));
-                        if(BIRD_OS=='windows'){
-                            $vv = str_replace('\\', '/', $vv);
-                        }
-                        if($vv && !in_array($vv, $v)) {
-                            $v[]=$vv;
-                        }
-                        unset($vk, $vv);
-                    }
-                    if(count($v)<=1) $v=implode('', $v);
-                    else $v=array_values($v);
                 } else {
-                    $v = (substr($v, 0, 1)!='/')?(realpath(BIRD_APP_ROOT.'/'.$v)):(realpath($v));
-                    if(BIRD_OS=='windows'){
-                        $v = str_replace('\\', '/', $v);
-                    }
+                    $pv = array($v);
                 }
+                if($w!==false) {
+                    $npv = array();
+                    foreach($pv as $v) {
+                        if(strpos($v, '*')!==false) {
+                            $npv = array_merge($npv, glob($v, GLOB_ONLYDIR));
+                        }
+                        unset($v);
+                    }
+                    unset($pv);
+                    $pv = $npv;
+                    unset($npv);
+                }
+                $v=array();
+                foreach($pv as $vk=>$vv) {
+                    $vv = (substr($vv, 0, 1)!='/')?(realpath(BIRD_APP_ROOT.'/'.$vv)):(realpath($vv));
+                    if(BIRD_OS=='windows'){
+                        $vv = str_replace('\\', '/', $vv);
+                    }
+                    if($vv && !in_array($vv, $v)) {
+                        $v[]=$vv;
+                    }
+                    unset($vk, $vv);
+                }
+                if(count($v)<=1) $v=implode('', $v);
+                else $v=array_values($v);
+
                 if($v) $this->config['Birds'][$k] = $v;
             } else if(is_string($v) && substr($v, 0, 1)=='[' && substr($v, -1)==']') {
                 $this->config['Birds'][$k] = preg_split('#\s*,\s*#', trim(substr($v, 1, strlen($v)-2)), null, PREG_SPLIT_NO_EMPTY);

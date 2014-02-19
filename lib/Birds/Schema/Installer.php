@@ -53,12 +53,16 @@ class Installer
                 if(!$o['connection']) {
                     $dbs = \bird::app()->Data;
                     foreach($dbs as $n=>$a) {
-                        $o['table'] = array_merge($o['table'], \Birds\Data::connect($n, $a)->getTables());
+                        $cn = (isset($a['class']))?($a['class']):('Birds\\Data\\'.ucfirst(substr($a['dsn'], 0, strpos($a['dsn'], ':'))));
+                        $o['table'] = array_merge($o['table'], $cn::getTables($cn::connect($n)));
                         unset($n, $a);
                     }
                     unset($dbs);
                 } else {
-                    $o['table'] = \Birds\Data::connect($o['connection'])->getTables();
+                    $a = \bird::app()->Data[$o['connection']];
+                    $cn = (isset($a['class']))?($a['class']):('Birds\\Data\\'.ucfirst(substr($a['dsn'], 0, strpos($a['dsn'], ':'))));
+                    $o['table'] = array_merge($o['table'], $cn::getTables($cn::connect($n)));
+                    unset($a);
                 }
             }
             foreach($o['table'] as $tn) {

@@ -120,7 +120,7 @@ class Minifier
                 if(${$type.'n'}) {
                     $t = max(${$type});
                     $time=date('YmdHis', $t);
-                    $f = md5(\Birds\bird::site().${$type.'n'}).'.'.$type;
+                    $f = \bird::hash(\Birds\bird::site().${$type.'n'}).'.'.$type;
                     $fn = self::file(self::$assetsUrl.'/'.$f);
                     if(!$fn || filemtime($fn)<max(${$type})) { // generate
                         if(!$fn) {
@@ -128,12 +128,21 @@ class Minifier
                              && !($fn=\bird::isWritable(\Birds\bird::app()->Birds['routes-dir'], self::$assetsUrl.'/'.$f))
                             ) {
                                 // cannot combine...
+                                /*
+                                if($type=='css') {
+                                    if($before) $r = '<link rel="stylesheet" type="text/css" href="'.self::$assetsUrl.'/'.$f.'?'.$time.'" />'.$r;
+                                    else $r .= '<link rel="stylesheet" type="text/css" href="'.self::$assetsUrl.'/'.$f.'?'.$time.'" />';
+                                } else {
+                                    if($before) $r = '<script src="'.self::$assetsUrl.'/'.$f.'?'.$time.'"></script>'.$r;
+                                    else $r .= '<script src="'.self::$assetsUrl.'/'.$f.'?'.$time.'"></script>';
+                                }
+                                */
                             }
-                        } else {
+                        }
+                        if($fn) {
                             self::combine(array_keys(${$type}), $fn, $type, $compress);
                         }
                     }
-
                     if($raw) {
                         $r .= file_get_contents($fn);
                     } else  if($type=='css') {
