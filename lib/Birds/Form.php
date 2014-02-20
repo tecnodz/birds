@@ -26,9 +26,9 @@
 namespace Birds;
 class Form extends Node
 {
-    const ATTRIBUTES=' id class name action ';
+    const ATTRIBUTES=' id class name action method ';
     public static $base=array();
-    public $node='form', $type, $id, $name, $block, $label, $multiple, $min, $max, $bind, $length, $regex, $required, $depends, $choices, $filter, $value;
+    public $node='form', $type, $id, $name, $method, $block, $label, $multiple, $min, $max, $bind, $length, $regex, $required, $depends, $choices, $filter, $value;
     /**
      * Form constructor
      */
@@ -70,6 +70,11 @@ class Form extends Node
         $this->bind = $v;
     }
 
+    public function getMethod()
+    {
+        return ($this->method)?($this->method):('post');
+    }
+
     public function addItem($v, $k=null, $F=null) {
         if(!$v && (!$k || is_int($k))) return false;
         if(!is_array($v) && !is_object($v)) $v=array('content'=>$v);
@@ -92,7 +97,7 @@ class Form extends Node
         if(!isset($cn)) {
             $cn = 'Birds\\Form\\Input';
         }
-        $this->items[] = $cn::create($v, null, $F);
+        $this->items[] = $cn::create($v, null, null, $F);
         unset($cn, $k, $v);
         return $F;
     }
@@ -111,11 +116,12 @@ class Form extends Node
      *
      * @returns Birds\Form object
      */
-    public static function create($o, $d=null, $F=null)
+    public static function create($o, $scope=null, $d=null, $F=null)
     {
         if(!is_array($o)) {
-            $sn = (is_object($o))?(get_class($o)):($sn);
-            $ff = array(str_replace(array('\\', '/'), '.', $sn).'-form.yml');
+            if($scope) $scope .= '-';
+            $sn = (is_object($o))?(get_class($o)):($o);
+            $ff = array(str_replace(array('\\', '/'), '.', $sn).'-'.$scope.'form.yml');
             if(property_exists($sn, 'schemaid')) {
                 array_unshift($ff, $sn::$schemaid.'-form.yml');
             }
@@ -127,10 +133,9 @@ class Form extends Node
             if(is_object($o)) $f['bind'] = $o;
         } else {
             $f = $o;
-            $o = $d;
         }
         $cn = get_called_class();
 
-        return new $cn($f, $o, $F);
+        return new $cn($f, $d, $F);
     }
 }

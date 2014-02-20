@@ -24,28 +24,28 @@
  * @link      http://tecnodz.com/
  */
 namespace Birds\Form;
-class Input extends \Birds\Form
+class Button extends \Birds\Form
 {
-    const ATTRIBUTES=' id class name type value placeholder ';
-    public $node='input', $type='text', $placeholder;
+    const ATTRIBUTES=' id class name type value ';
+    public $node='button', $type='button';
 
     public function render()
     {
         $b=$a='';
+        $c = \bird::$cssPrefix.'button'
+            . ((isset($this->class))?(' button-'.str_replace(' button-', ' ', $this->class)):(''));
         if(isset($this->block)) {
             $e = (is_string($this->block))?($this->block):('div');
             $b = '<'.$e
                 . ((isset($this->id))?(' id="i__'.$this->id.'"'):(''))
-                . ' class="'
-                    . \bird::$cssPrefix.'input'
-                    . ((isset($this->class))?(' input-'.str_replace(' input-', ' ', $this->class)):(''))
-                .'">'.$b;
+                . ' class="'.$c.'">'.$b;
             $a = '</'.$e.'>';
         }
         if(isset($this->label)) {
-            $b .= '<label><span class="'.\bird::$cssPrefix.'label">'.\bird::xml($this->label).'</span>';
-            $a = '</label>'.$a;
+            if(!$this->attributes) $this->attributes=array();
+            $this->attributes['class'] = $c;
         }
+        unset($c);
 
         return $b.parent::render().$a;
     }
