@@ -24,7 +24,7 @@
  * @link      http://tecnodz.com/
  */
 namespace Birds;
-class Session implements \ArrayAccess {
+class Session extends Data {
     public static $name, $id, $expires=0;
 
     public function __toString()
@@ -46,11 +46,54 @@ class Session implements \ArrayAccess {
     public static function id()
     {
         if(is_null(self::$id)) {
-            bird::session();
+            self::create();
         }
         return self::$id;
     }
 
+    public static function restore($sid)
+    {
+        return Cache::get('session/'.$sid, Session::$expires);
+    }
+
+    public static function create($d=null)
+    {
+        if(is_null(bird::$session)) {
+            foreach(bird::cookies($n=Session::name()) as $c) {// get cookie id from config
+                if($u=Session::restore($c)) {
+                    break;
+                }
+                unset($u, $c);
+            }
+            if(!isset($u)) {
+                // if(!isset($c))  // reset cookie id
+                $c = uniqid();
+                bird::$session = new Session($d);
+            } else {
+                bird::$session = $u;
+            }
+            Session::$id = $c;
+            setcookie($n, $c, (Session::$expires>2592000 || Session::$expires<=0)?(Session::$expires):(time()+Session::$expires), '/', null, false, true);
+            unset($u, $c, $n);
+        }
+        return bird::$session;
+    }
+
+    public static function store()
+    {
+        Cache::set('session/'.Session::$id, bird::$session, Session::$expires);
+    }
+
+    public static function destroy()
+    {
+        if(is_null(self::$id)) {
+            self::create();
+        }
+        Cache::delete('session/'.Session::$id);
+        setcookie($n, '', -86400, '/', null, false, true);
+    }
+
+    /*
     public function offsetSet($offset, $value) {
         if (is_null($offset)) {
             $i=0;
@@ -135,5 +178,5 @@ class Session implements \ArrayAccess {
         }
         return isset($this->{$offset}) ? $this->{$offset} : null;
     }
-
+    */
 }

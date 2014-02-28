@@ -373,23 +373,7 @@ class bird
 
     public static function session()
     {
-        if(is_null(self::$session)) {
-            foreach(self::cookies($n=Session::name()) as $c) {// get cookie id from config
-                if($u=Cache::get('session/'.$c)) {
-                    break;
-                }
-                unset($u);
-            }
-            if(!isset($u)) {
-                if(!isset($c)) $c = uniqid();
-                $u = new Session();
-            }
-            self::$session = $u;
-            Session::$id = $c;
-            setcookie($n, $c, (Session::$expires>2592000 || Session::$expires<=0)?(Session::$expires):(time()+Session::$expires), '/', null, false, true);
-            unset($u, $c, $n);
-        }
-        return self::$session;
+        return Session::create();
     }
 
     //public static function getBrowserCache($etag, $lastModified, $expires=false, $end=true)
@@ -522,7 +506,20 @@ class bird
         if($end) {
             self::end();
         }
-    }    
+    }
+
+    public static function date($f=null, $t=null)
+    {
+        if(!$f) $f = 'Y-m-d\TH:i:s.u';
+        if(is_null($t)) $t = BIRD_TIME;
+        else if(is_string($t)) $t = strtotime($t);
+
+        if(strpos($f,'u')!==false) {
+            list($t, $u) = explode('.', (string) $t);
+            $f = str_replace('u', substr(str_pad($u, 6, '0'), 0, 6), $f);
+        }
+        return date($f, $t);
+    }
 
     /**
      * Debugging method

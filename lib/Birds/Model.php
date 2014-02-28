@@ -94,23 +94,24 @@ class Model extends Data
 
     public function save($trans=null, $relDepth=2)
     {
-        if(!$this->event('before-save')) return false;
         $cn = get_called_class();
         $sc = Schema::load($cn);
         $insert = $this->isNew();
         try {
+            if(!$this->event('before-save')) throw new \Exception("before-save trigger failed");
             $H = Data::handler($sc);
             // start transaction
             if($trans!==false) $trans = $H->transaction();
 
             // send data to update to handler
-            if($this->_del) {
-                $H->delete($this);
-            } else if($insert) {
-                $H->insert($this);
-            } else {
-                $H->update($this);
-            }
+            if($this->_del)  $ev = 'delete';
+            else if($insert) $ev = 'insert';
+            else             $ev = 'update';
+
+            if(!$this->event('before-'.$ev)) throw new \Exception("before-{$ev} trigger failed");
+            $H->$ev($this);
+            if(!$this->event('after-'.$ev)) throw new \Exception("after-{$ev} trigger failed");
+
             // lower $relDepth--;
             if(!$this->_del && $relDepth) {
                 $relDepth--;
@@ -129,16 +130,17 @@ class Model extends Data
                     unset($rn, $ro);
                 }
             }
+            if(!$this->event('after-save')) throw new \Exception("after-save trigger failed");
             // commit transaction
             if($trans!==false) $H->commit($trans, true);
 
         } catch(Exception $e) {
-            \bird::debug(__METHOD__, $e->getMessage());
+            \bird::log('ERROR['.__METHOD__.']: '.$e->getMessage());
             // rollback transaction
             if($trans!==false) $H->rollback($trans, false);
             return false;
         }
-        return true;
+        return $this;
     }
 
     public function event($e)
@@ -158,11 +160,30 @@ class Model extends Data
 
     public function timestamp()
     {
-        list($u, $t) = explode('.', (string) BIRD_TIME);
-        $t = date('Y-m-d\TH:i:s', BIRD_TIME).substr(fmod(BIRD_TIME,1),1,7);
+        $t = bird::date();
         foreach(func_get_args() as $k) {
             $this->$k = $t;
         }
+        return $this;
+    }
+
+    public function autoincrement($fn)
+    {
+        $o=array(
+            'where' => $this->asArray('primary'),
+            'select' => "@next({$fn}) {$fn}",
+        );
+        foreach($o['where'] as $k=>$v) {
+            if($k==$fn && $v) return $this;
+            else if($k==$fn || !$v) unset($o['where'][$k]);
+        }
+        try {
+            $this->$fn = Data::handler(get_called_class())->find($o)->fetch(0)->$fn;
+        } catch(\Exception $e) {
+            \bird::log('ERROR['.__METHOD__.']: '.$e->getMessage());
+            return false;
+        }
+        return $this;
     }
 
     public function relation($r)
@@ -177,7 +198,9 @@ class Model extends Data
     {
         $cn = get_called_class();
         $r = array();
-        foreach($cn::scope($scope) as $c) {
+        $fs = $cn::scope($scope);
+        if(!$fs) return $r;
+        foreach($fs as $c) {
             $r[$c] = $this->$c;
             unset($c);
         }

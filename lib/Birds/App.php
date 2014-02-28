@@ -198,7 +198,8 @@ class App
         }
         if(!is_null(bird::$session)) {
             // store session
-            Cache::set('session/'.Session::$id, bird::$session, Session::$expires);
+            Session::store();
+            //Cache::set('session/'.Session::$id, bird::$session, Session::$expires);
             //bird::log('saving session: session/'.Session::$id.' '.Session::name(), var_export(bird::$session, true));
         }
         if(self::$running && $exception) {

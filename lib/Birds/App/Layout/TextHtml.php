@@ -136,7 +136,7 @@ class TextHtml
         if(\Birds\Schema::$cms) {
             \Birds\App::$response->items[1]->append .= \Birds\Schema::signature('Birds\\App\\Route', \Birds\App\Route::$current, \bird::$signature, 'bird-signature')
                 //. '<script>Modernizr.load([{test:window.jQuery,nope:"'.\Birds\bird::app()->Birds['assets-url'].'/js/jquery.js"},{test:("bird" in window),nope:"'.$cms.'.js?'.\Birds\App\Layout::$vars['$BIRD_ENV'].'",complete:function(){Modernizr.load([{test:window.Bird,yep:["'.$cms.'/bird.js?Cms,'.\Birds\App\Layout::$vars['$BIRD_ENV'].'","/_b/bird-cms.css?'.\Birds\App\Layout::$vars['$BIRD_ENV'].'"],complete:function(){bird.ready()}}])}}]);</script>'
-                . '<script>Modernizr.load([{test:("bird" in window),nope:"'.\Birds\Schema::$cms.'.js?'.\Birds\App\Layout::$vars['$BIRD_ENV'].'",complete:function(){Modernizr.load([{test:window.Bird,yep:["'.\Birds\Schema::$cms.'/bird.js?Cms,'.\Birds\App\Layout::$vars['$BIRD_ENV'].'","/_b/bird-cms.css?'.\Birds\App\Layout::$vars['$BIRD_ENV'].'"],complete:function(){bird.ready()}}])}}]);</script>'
+                . '<script>Modernizr.load([{test:("bird" in window),nope:"'.\Birds\Schema::$cms.'.js?'.\Birds\App\Layout::$vars['$BIRD_ENV'].'",complete:function(){Modernizr.load([{test:window.Bird,yep:["'.\Birds\Schema::$cms.'/bird.js?Cms,'.\Birds\App\Layout::$vars['$BIRD_ENV'].'","/_b/bird-cms.css?'.\Birds\App\Layout::$vars['$BIRD_ENV'].'"],complete:function(){if("bird" in window)bird.ready();}}])}}]);</script>'
             ;
         } else {
             \Birds\App::$response->items[1]->append .= '<div id="bird-signature">'.\bird::$signature.'</div>';

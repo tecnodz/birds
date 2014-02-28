@@ -36,7 +36,7 @@ class Sql
         return (string) $this->name;
     }
 
-    public static function connect($n='', $exception=true)
+    public static function connect($n='', $exception=true, $tries=3)
     {
         $cn = get_called_class();
         if(!isset($cn::$conn[$n]) || !$cn::$conn[$n]) {
@@ -45,6 +45,10 @@ class Sql
                     + array('username'=>null, 'password'=>null, 'options'=>$cn::$options);
 
                 $cn::$conn[$n] = new \PDO($db['dsn'], $db['username'], $db['password'], $db['options']);
+                if(!$cn::$conn[$n]) {
+                    $tries--;
+                    return $cn::connect($n, $exception, $tries);
+                }
                 if(isset($db['options'][\PDO::MYSQL_ATTR_INIT_COMMAND])) {
                     $cn::$conn[$n]->exec($db['options'][\PDO::MYSQL_ATTR_INIT_COMMAND]);
                 }
@@ -296,6 +300,11 @@ class Sql
         return \Birds\Data::handler($rcn)->find($o)->fetch($i);
     }
 
+    private function getFunctionNext($fn)
+    {
+        return 'ifnull(max('.$this->getAlias($fn).'),0)+1';
+    }
+
     private function getAlias($f)
     {
         $ofn = $fn=$f;
@@ -307,6 +316,8 @@ class Sql
                 unset($i, $nfn);
             }
             return str_replace($s, $r, $fn);
+        } else if(preg_match('/@([a-z]+)\(([^\)]*)\)/', $fn, $m) && method_exists($this, $a='getFunction'.ucfirst($m[1]))) {
+            return str_replace($m[0], $this->$a(trim($m[2])), $fn);
         }
 
         if(strpos($fn, '[')!==false && preg_match('/\[([^\]]+)\]/', $fn, $m)) {
@@ -524,6 +535,15 @@ class Sql
     {
         return $this->query($q, \PDO::FETCH_COLUMN, $i);
     }
+
+    /*
+    public function lastInsertId($fn=null)
+    {
+        $id = self::connect($this->schema('connection'))->lastInsertId($fn);
+        return $id;
+    }
+    */
+
 
     public static function escape($str, $enclose=true)
     {
