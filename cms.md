@@ -80,7 +80,7 @@ websites.
 
 ## Ideas ##
 
-*   Omnibox-like query to reach all database objects and applications
+*   Omnibox-like query to reach all database objects and applications.
 
 *   Query could be activated by voice or text.
 
