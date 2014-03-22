@@ -78,6 +78,12 @@ websites.
     +   When a route is found, it must match the formats (if available). If the route addresses a parent folder/file, 
         it must also have the "options: { multiviews: true }" set.
 
+## Ideas ##
+
+*   Omnibox-like query to reach all database objects and applications
+
+*   Query could be activated by voice or text.
+
 
 ## User Interfaces ##
 
