@@ -1,8 +1,7 @@
 birds
 =====
 
-PHP framework to lead you to the cloud.
-
+Birds is a new CMS/framework concept for PHP applications. It aims to be simple, fast and reliable, able to handle extremely complex datasets with ease to build a website — all this under 4MB of memory per proccess and 0.3s of duration.
 
 ## Standalone instance ##
 
