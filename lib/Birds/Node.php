@@ -95,15 +95,23 @@ class Node
 
     public function render()
     {
-        return ((isset($this->before))?($this->before):(''))
-            . '<'.$this->node.$this->renderAttributes()
-            .   ((strpos(self::EMPTY_NODES, " {$this->node} ")!==false)?('/>'):('>'
-                .   ((isset($this->prepend))?($this->prepend):(''))
-                .   $this->renderContent()
-                .   ((isset($this->append))?($this->append):(''))
-                . '</'.$this->node.'>'
-                ))
-            . ((isset($this->after))?($this->after):(''));
+        if($this->node) {
+            return ((isset($this->before))?($this->before):(''))
+                . '<'.$this->node.$this->renderAttributes()
+                .   ((strpos(self::EMPTY_NODES, " {$this->node} ")!==false)?('/>'):('>'
+                    .   ((isset($this->prepend))?($this->prepend):(''))
+                    .   $this->renderContent()
+                    .   ((isset($this->append))?($this->append):(''))
+                    . '</'.$this->node.'>'
+                    ))
+                . ((isset($this->after))?($this->after):(''));
+        } else {
+            return ((isset($this->before))?($this->before):(''))
+                .  ((isset($this->prepend))?($this->prepend):(''))
+                .  $this->renderContent()
+                .  ((isset($this->append))?($this->append):(''))
+                .  ((isset($this->after))?($this->after):(''));
+        }
     }
 
     public function renderContent()
