@@ -1,6 +1,7 @@
 ---
 meta:
   title: ~
+  script: "/_/js/site.js"
   stylesheet: "/_/css/site.less"
 slots: [ header, body, nav, footer ]
 content:

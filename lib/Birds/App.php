@@ -387,15 +387,20 @@ class App
             $lang = $l;
         } else if(count($l)<2) {
             $lang = $l[0];
-        } else if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-            $accept = preg_split('/(;q=[0-9\.]+|\,)\s*/', $_SERVER['HTTP_ACCEPT_LANGUAGE'], null, PREG_SPLIT_NO_EMPTY);
-            foreach ($accept as $lang) {
-                if (in_array($lang, $l) || (strlen($lang)>2 && in_array($lang=substr($lang,0,2), $l))) {
-                    break;
-                }
+        } else {
+            if(!(isset($_COOKIE['lang']) && ($lang=$_COOKIE['lang']) && (in_array($lang, $l) || (strlen($lang)>2 && in_array($lang=substr($lang,0,2), $l))))) {
                 unset($lang);
             }
-            unset($accept);
+            if (!isset($lang) && isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+                $accept = preg_split('/(;q=[0-9\.]+|\,)\s*/', $_SERVER['HTTP_ACCEPT_LANGUAGE'], null, PREG_SPLIT_NO_EMPTY);
+                foreach ($accept as $lang) {
+                    if (in_array($lang, $l) || (strlen($lang)>2 && in_array($lang=substr($lang,0,2), $l))) {
+                        break;
+                    }
+                    unset($lang);
+                }
+                unset($accept);
+            }
         }
         if(!isset($lang)) {
             $lang = bird::$lang;

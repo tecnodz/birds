@@ -94,7 +94,15 @@ button {width: auto; overflow: visible;}
 .clearfix:after { clear: both; }
 .clearfix { zoom: 1; }
 
-
+.lang{position:absolute;top:-75px;left:100%;color:#ccc;white-space:nowrap}
+.lang:before{content:'[ '}
+.lang:after{content:' ]'}
+.lang a{font-size:0.85em};
+.lang a.selected{font-weight:bold};
+.lang a:link, .lang a:visited{color:#bbb;text-decoration:none}
+.lang a:hover,.lang a:active{color:#444;text-decoration:none}
+.lang a:after{content:', ';}
+.lang a:last-child:after{content:''}
 
 /* Ok, this is where the fun starts.
 -------------------------------------------------------------------------------*/
@@ -223,4 +231,5 @@ html.chumbo .circle.logo{border-color:#2e434d;background:#ccff00;}
 	.contato p:first-child{position:absolute;right:0;text-align:right}
 	html.chumbo{background:#162428;color:#fff}
 	.desktop{display:none}
+	.lang{top:0;left:auto;right:0;}
 }

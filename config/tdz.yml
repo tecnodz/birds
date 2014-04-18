@@ -4,4 +4,4 @@ all:
     apps-dir: .
     document-root: ../htdocs
     languages: [ pt, en ]
-    language: ~ 
+    language: ~
