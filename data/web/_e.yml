@@ -9,10 +9,10 @@ meta:
 content:
   header:
     -
-      class: Birds\App\E
+      class: Estudio
       method: header
       prepare: true
   body:
     -
-      class: Birds\App\E
+      class: Estudio
       prepare: true

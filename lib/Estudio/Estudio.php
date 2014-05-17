@@ -1,35 +1,23 @@
 <?php
 /**
- * Bird Content Managemt System
+ * E-studio Content Managemt System
  *
  * PHP version 5.3
  *
- * @category  App
+ * @category  Estudio
  * @package   Birds
  * @author    Guilherme Capilé, Tecnodesign <ti@tecnodz.com>
- * @copyright 2013 Tecnodesign
- * @license   http://creativecommons.org/licenses/by/3.0  CC BY 3.0
+ * @copyright 2014 Tecnodesign
+ * @license   not defined
  * @version   SVN: $Id$
- * @link      http://tecnodz.com/
+ * @link      https://tecnodz.com/
  */
-
-/**
- * Bird Content Managemt System
- *
- * @category  App
- * @package   Birds
- * @author    Guilherme Capilé, Tecnodesign <ti@tecnodz.com>
- * @copyright 2013 Tecnodesign
- * @license   http://creativecommons.org/licenses/by/3.0  CC BY 3.0
- * @link      http://tecnodz.com/
- */
-namespace Birds\App;
-class E 
+class Estudio
 {
     public static function render($format='text/html')
     {
         \Birds\Schema::$cms = false;
-        $valid = Credential::check(get_called_class(), null, 2);
+        $valid = \Birds\App\Credential::check(get_called_class(), null, 2);
         if($format!='text/html') {
             $base = \bird::scriptName();
             $base = substr($base, 0, strrpos($base, '.'));
@@ -51,7 +39,7 @@ class E
             if($valid!==true) {
                 throw new \Birds\App\HttpException(403);
             }
-            return Assets::renderResource($format);
+            return \Birds\App\Assets::renderResource($format);
         }
         if($valid!==true) {
             throw new \Birds\App\HttpException(403);
@@ -59,7 +47,7 @@ class E
 
         $p =\bird::urlParam();
         if(count($p)<2) {
-            throw new HttpException(404);
+            throw new \Birds\App\HttpException(404);
         }
         try {
             $c = \Birds\Schema::load($p[0]);
@@ -70,7 +58,7 @@ class E
                 throw new \Exception('Not enough privileges!');
             }
             $c+=array('method'=>null, 'params'=>null,'uid'=>$uid);
-            if(!($C=Content::load($c))) {
+            if(!($C=\Birds\Content::load($c))) {
                 throw new \Exception('Not enough privileges! Or something got wrong');
             }
             unset($hp, $p);
@@ -80,7 +68,7 @@ class E
             \Birds\Form::$base['block']='div';
             $f = \Birds\Form::create($C);
             if(!$f) {
-                throw new HttpException(404);
+                throw new \Birds\App\HttpException(404);
             }
 
             // enable csrf prevention
@@ -93,12 +81,12 @@ class E
             return $f->render($format);
 
 
-        } catch (HttpException $e) {
+        } catch (\Birds\App\HttpException $e) {
             \Birds\bird::log(__METHOD__.' ('.$e->getLine().'): '.$e->getMessage());
-            throw new HttpException($e->getCode());
+            throw new \Birds\App\HttpException($e->getCode());
         } catch (\Exception $e) {
             \Birds\bird::log(__METHOD__.' ('.$e->getLine().'): '.$e->getMessage());
-            throw new HttpException(500);
+            throw new \Birds\App\HttpException(500);
         }
     }
 
@@ -109,3 +97,4 @@ class E
             return '<h1>Birds</h1>';
     }
 }
+

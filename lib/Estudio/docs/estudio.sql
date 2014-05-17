@@ -1,0 +1,70 @@
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL';
+
+CREATE SCHEMA IF NOT EXISTS `estudio` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci ;
+
+CREATE TABLE IF NOT EXISTS `estudio`.`page` (
+  `id` BIGINT(19) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `url` VARCHAR(150) NOT NULL,
+  `language` VARCHAR(5) NOT NULL,
+  `title` VARCHAR(250) NULL DEFAULT NULL,
+  `formats` VARCHAR(250) NULL DEFAULT NULL,
+  `script` VARCHAR(250) NULL DEFAULT NULL,
+  `stylesheet` VARCHAR(250) NULL DEFAULT NULL,
+  `multiview` TINYINT(1) NULL DEFAULT NULL,
+  `created` DATETIME NOT NULL,
+  `modified` DATETIME NOT NULL,
+  `published` DATETIME NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `idx__page__url` (`url` DESC),
+  INDEX `idx__page__modified` (`modified` DESC),
+  INDEX `idx__page__published` (`published` DESC))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_general_ci;
+
+CREATE TABLE IF NOT EXISTS `estudio`.`content` (
+  `page` BIGINT(19) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` INT(10) UNSIGNED NOT NULL,
+  `slot` VARCHAR(45) NOT NULL DEFAULT 'body',
+  `priority` INT(11) NOT NULL DEFAULT 1,
+  `class` VARCHAR(90) NULL DEFAULT NULL,
+  `method` VARCHAR(45) NULL DEFAULT NULL,
+  `params` TEXT NULL DEFAULT NULL,
+  `content` BLOB NULL DEFAULT NULL,
+  `prepare` TINYINT(1) NULL DEFAULT NULL,
+  `modified` DATETIME NOT NULL,
+  `published` DATETIME NULL DEFAULT NULL,
+  PRIMARY KEY (`page`, `id`),
+  INDEX `idx__content__modified` (`modified` DESC),
+  CONSTRAINT `fk_content_page`
+    FOREIGN KEY (`page`)
+    REFERENCES `estudio`.`page` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_general_ci;
+
+CREATE TABLE IF NOT EXISTS `estudio`.`credential` (
+  `assign` VARCHAR(100) NOT NULL,
+  `role` TINYINT(3) UNSIGNED NOT NULL DEFAULT 1,
+  `id` INT(10) UNSIGNED NOT NULL COMMENT ' /* comment truncated */ /*auto-increment*/',
+  `require` TINYINT(1) NULL DEFAULT NULL,
+  `certificate` VARCHAR(100) NULL DEFAULT NULL,
+  `http` VARCHAR(100) NULL DEFAULT NULL,
+  `group` VARCHAR(100) NULL DEFAULT NULL,
+  `user` VARCHAR(100) NULL DEFAULT NULL,
+  `ip` VARCHAR(100) NULL DEFAULT NULL,
+  `modified` DATETIME NOT NULL,
+  PRIMARY KEY (`assign`, `role`, `id`),
+  INDEX `idx__credential__modified` (`modified` DESC))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_general_ci;
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

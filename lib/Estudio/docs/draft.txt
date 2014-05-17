@@ -1,0 +1,42 @@
+
+*** Motivation ***
+
+While there are many options for Content Management Systems (CMS) available, they almost always address simple and predefined structures, like blogs and basically structured websites. The situations we find are almost always different from that: they require a specialized approach that integrates several applications together, and quickly enable the creation of new applications. This, in the other hand, could be accomplished with several rapid-development frameworks, but they lack the unity a CMS can bring to a website — almost always they require administrative interfaces where many CRUD interfaces (interfaces that handle data with Create, Review, Update and Delete actions). When complexity grows, these interfaces become more complex and demand more power to run.
+
+We wanted a CMS that does not require administrative interfaces to update *any* data or better, to perform *any* task related to te website. And most important, that does not add complexity or require more power as they become more complex.
+
+We were getting used to spending dozens (sometimes over a hundred) megabytes per request, to finally create a page with less than 10k in size. In order to speed up these pages, we added more resources, CPU power, two, four cores so that the pages could be rendered in less than 2 seconds — this is too much time for a web server, that can have peaks of hundreds or thousands of simultaneous requests. Then we realized the memory was the bottleneck: we assumed we had plenty resources available, and kept going bigger.
+
+We are now going to the opposite direction of that. We want the smallest footprint possible, because that will almost always give us the fastest response time. With fewer resources used in less time, we want to advocate the use of smaller servers, be more energy efficient, and still get a better result, faster. 
+
+Focusing on the smallest footprint possible, we named our CMS as Birds. They are best known for being small, light and able to fly (of course there are exceptions).
+
+
+
+*** Benefits over existing CMS ***
+
+- Smaller footprint: every request should be rendered with less than 4Mib of memory and in less than 0.5 second. We actually use at least 20Mib (40MiB average, topping 100+MiB on administrative interfaces) and some response times go far beyond a second or two...
+
+- All updates can be version controlled and inherit a publishing workflow (who can only review and those allowed to publish), including database objects. It means that controls like the Issues can be part of the CMS, not an application apart from it.
+
+- Any database object can be edited directly from the rendered pages, without the need for an administrative interface. In practice, it means that Members don't need to open up a web form to update their subscriptions, or their membership information — they can update it directly from page contents, and whereas they are not allowed for permanent updates, they will be able to see their version of the page (while it's not approved or dismissed). Whoever is able to update a news item can also do it directly from the website.
+
+- Multiple levels of authentication are possible, natively: you may require either a certificate, a HTTP password, a social network identity and a username and password for authentication — or all of them. This can also enable visitors to use their social network/oauth providers to authenticate them (currently non-members can only authenticate them through unsecure connections).
+
+- All CMS content will be version controlled, and new servers can be deployed from that version control repository (Git). In case of FIRST, it enables the CMS to be quickly spawned to several servers fully replicated, in order to become a cluster under heavy loaded periods (this feature is expected for Q3 2014).
+
+- Support for microformats and Schema.org: in fact, the CMS is based upon the concept of microformats. Support for Sitemap.org is also expected.
+
+
+
+*** Roadmap and timeframe for FIRST.org ***
+
+The basic structure of the CMS already exists (it's working on https://tecnodz.com, but that's no test compared to FIRST!). We should finish up the core CMS features within the first quarter of February. Content migration from existing CMS (Sympa) to Birds CMS should be made using a custom script, that will enable us to quicly sync with bthe latest content when migration comes. The issue is FIRST applications and the Symfony framework — the migration to a new framework should take up to a month and this would compromise the schedule for migrating in 2014/Q1.
+
+If FIRST would really like to adopt this framework, we can make its development together with FIRST.org migration, in which case we could have a working prototype by the end of February, with enough time for testing (and pentesting!) within Q1. However, this would make part of the CMS development to be billed (in work hours) to FIRST.org (if a migration is done after the CMS is ready, only the migration costs itself would be charged).
+
+
+
+
+We do intend to release the Birds CMS as a free, Open Source project. However, we may have early release version that is on a private repository (for this one the licensing would be a little more restrictive, but it would be available to Tecnodesign clients and subscribers).
+
