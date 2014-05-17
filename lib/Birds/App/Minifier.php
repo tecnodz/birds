@@ -109,7 +109,7 @@ class Minifier
                     $js[$fn] = filemtime($fn);
                     $jsn.=':'.$f;
                 } else {
-                    $r .= '<script src="'.\Birds\bird::xml($f).'"></script>';
+                    $r .= '<script async src="'.\Birds\bird::xml($f).'"></script>';
                 }
                 unset($m);
             }

@@ -9,8 +9,10 @@ window.requestAnimFrame = (function(){
 })();
 
 (function(window) {
+
+
 window.bird = {
-    version: 0.2,
+    version: '1.0',
     created: new Date(),
     online: navigator.onLine,
     root: document.getElementsByTagName('body')[0],
@@ -18,17 +20,58 @@ window.bird = {
     plugins: [],
     onReady: [],
     css: '',
+    isReady: false,
 
-    ready: function()
+    setReady:function(fn)
     {
-        while(bird.onReady.length>0) {
-            (bird.onReady.shift())(bird);
+        bird.isReady = false;
+        // Mozilla, Opera, Webkit 
+        if (document.addEventListener) {
+          document.addEventListener( "DOMContentLoaded", function(){
+            document.removeEventListener( "DOMContentLoaded", arguments.callee, false);
+            bird.isReady = true;
+            fn();
+          }, false );
+
+        // If IE event model is used
+        } else if ( document.attachEvent ) {
+          // ensure firing before onload
+          document.attachEvent("onreadystatechange", function(){
+            if ( document.readyState === "complete" ) {
+              document.detachEvent( "onreadystatechange", arguments.callee );
+              bird.isReady = true;
+              fn();
+            }
+          });
         }
     },
+
+    ready: function(fn)
+    {
+        if(arguments.length>0) {
+            if(!bird.isReady) bird.setReady(bird.ready);
+            bird.onReady.push(fn);
+        }
+        if(bird.isReady) {
+            while(bird.onReady.length>0) {
+                (bird.onReady.shift())(bird);
+            }
+        }
+    },
+
+    load: function()
+    {
+        var i=arguments.length;
+        while(i-- >0) {
+            if(arguments[i].indexOf('.css')>-1) bird.element.call(document.getElementsByTagName('head')[0], {e:'link',a:{rel:'stylesheet',type:'text/css',href:arguments[i]}});
+            else bird.element.call(document.body, {e:'script',p:{async:true,src:arguments[i]}});
+        }
+    },
+
     error: function() 
     {
         console.log('[ERROR]'+JSON.stringify(arguments));
-        bird.alert(bird.t.serverError);
+        bird.alert(bird.t('serverError'));
     },
     log: function() 
     {
@@ -64,7 +107,36 @@ window.bird = {
                 .replace(/&lt;/g, '<')
                 .replace(/&amp;/g, '&');
     },
+    cookie:function(name, value, expires, path, domain, secure) {
+        if(arguments.length>1) {
+            document.cookie = name + "=" + escape(value)
+                + ((arguments.length>2 && expires != null)?("; expires=" + expires.toGMTString()):(''))
+                + ((arguments.length>3 && path)?("; path=" + path):(''))
+                + ((arguments.length>4 && domain)?("; domain=" + domain):(''))
+                + ((arguments.length>5 && secure)?("; secure"):(''));
+        } else {
+            var a = name + "=", i = 0;
+            while (i < document.cookie.length) {
+                var j = i + a.length;
+                if (document.cookie.substring(i, j) == a) return bird.cookiev(j);
+                i = document.cookie.indexOf(" ", i) + 1;
+                if (i == 0) break;
+            }
+            return null;
 
+        }
+        return value;
+    },
+    cookiev:function(offset) {
+        var endstr = document.cookie.indexOf (";", offset);
+        if (endstr == -1) { endstr = document.cookie.length; }
+        return unescape(document.cookie.substring(offset, endstr));
+    },
+    lang: function(s)
+    {
+        if(s) bird.language=s;
+        return bird.language;
+    },
     click: function(c)
     {
         var t = c.getAttribute('onclick') || c.getAttribute('onmousedown');
@@ -129,6 +201,8 @@ window.bird = {
     },
 
     t: function(s) {
+        console.log('t: ', s, bird.t[s]);
+        return bird.t[s] || s;
         if(s in bird.t) return bird.t[s];
         else return s;
     },
@@ -169,6 +243,63 @@ window.bird = {
         } else {
             o.innerHTML = s;
         }
+    },
+    element: function(o,before,after) {
+        var r,n;
+        if(typeof(o)=='string') {
+            r=document.createTextNode(o);
+        } else if(o.e) {
+            r=document.createElement(o.e);
+            if(o.p) {
+                for(n in o.p) {
+                    r[n]=o.p[n];
+                    delete(o.p[n]);
+                    delete(n);
+                }
+            }
+            delete(o.p);
+            if(o.a) {
+                for(n in o.a) {
+                    r.setAttribute(n,o.a[n]);
+                    delete(o.a[n]);
+                    delete(n);
+                }
+            }
+            delete(o.a);
+            if(o.t) {
+                for(n in o.t) {
+                    if(n=='trigger' || n=='fastTrigger') bird[n](r,o.t[n]);
+                    else bird.addEvent(r,n,o.t[n]);
+                    delete(o.t[n]);
+                    delete(n);
+                }
+            }
+            delete(o.t);
+        } else {
+            if(o instanceof Array) o={c:o};
+            r=document.createDocumentFragment();
+        }
+        if(o.c) {
+            if(typeof(o.c)=='string') {
+                r.appendChild(document.createTextNode(o.c));
+            } else {
+                var t=o.c.length,i=0;
+                while(i < t) {
+                    if(typeof(o.c[i])=='string') r.appendChild(document.createTextNode(o.c[i]));
+                    else bird.element.call(r,o.c[i]);
+                    i++;
+                }
+                delete(i);
+                delete(t);
+            }
+        }
+        delete(o.c);
+        delete(o);
+
+        if(before) return before.parentNode.insertBefore(r,before);
+        else if(after) after.parentNode.insertBefore(r,after.nextSibling);
+        else if(this.appendChild) return this.appendChild(r);
+        else return r;
     },
     createElement: function(p, el, id, cn, c, fn)
     {
@@ -222,20 +353,19 @@ window.bird = {
     }
 };
 
-bird.t.serverError = 'The was an error while processing your request. Please try again later.';
 
 function charCodeFromCharacter(c) {
     return c.charCodeAt(0);
 }
 
+/*
 document.addEventListener('online',  updateOnlineStatus);
 document.addEventListener('offline', updateOnlineStatus);
 function updateOnlineStatus(event) {
     //console.log('updated online status from: '+bird.online+' to: '+navigator.onLine);
     bird.online = navigator.onLine;//var condition = navigator.onLine ? "online" : "offline";
 }
-
-
+*/
 
 if([].reduce) window.bird.hashCode=function(s){return s.split('').reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);}
 
@@ -252,6 +382,7 @@ if(window.bird.root.style.transition != undefined) {
 } else {
     bird.transitionEnd = null;
 }
+bird.language = bird.cookie('lang') || document.querySelector('meta[name="language"]').getAttribute('content');
 
 var _t={};
 bird.timeoutQueue=_t;

@@ -1,2 +1,0 @@
-/*! Birds */
-Modernizr.load([{test:window.jQuery,nope:"/_/js/jquery.js"},{test:("bird" in window),nope:"/_b.js",complete:function(){Modernizr.load([{test:window.Bird,yep:["/_b/bird.js?Cms","/_b/bird-cms.css"],complete:function(){bird.ready()}}])}}]);

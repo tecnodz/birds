@@ -1,8 +1,8 @@
 ---
 meta:
   title: ~
-  script: "/_/js/site.js"
-  stylesheet: "/_/css/site.less"
+  script: [ "/_/js/bird.js", "/_/js/site.js" ]
+  stylesheet: [ "/_/css/site.less" ]
 slots: [ header, body, nav, footer ]
 content:
   header:
@@ -14,6 +14,6 @@ nodes:
     before: '<!DOCTYPE html>'
   head:
     prepend: '<meta charset="utf-8" />'
-    append: '<script src="/_/js/modernizr.js"></script><link type="image/x-icon" href="/_/favicon.ico" rel="icon" /><link type="image/x-icon" href="/_/favicon.ico" rel="shortcut" />'
+    append: '<link type="image/x-icon" href="/_/favicon.ico" rel="icon" /><link type="image/x-icon" href="/_/favicon.ico" rel="shortcut" />'
 options:
   body-elements: [ header, nav, footer ]

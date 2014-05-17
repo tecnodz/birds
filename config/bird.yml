@@ -12,4 +12,4 @@ all:
     schema-dir:  "$BIRD_SITE_ROOT/data/schema:$BIRD_APP_ROOT/data/schema:$BIRD_ROOT/data/schema"
     credential-dir:  "$BIRD_SITE_ROOT/data/credential:$BIRD_APP_ROOT/data/credential:$BIRD_ROOT/data/credential"
     assets-url: "/_"
-    cms: '/_b'
+    cms: '/_e'

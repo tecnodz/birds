@@ -55,9 +55,6 @@ class TextHtml
 
         $s = array_keys(\Birds\App\Layout::$vars);
         $r = array_values(\Birds\App\Layout::$vars);
-        if(is_null(\Birds\Schema::$cms)) {
-            \Birds\Schema::$cms = \Birds\bird::app()->Birds['cms'];
-        }
 
         foreach($m as $n=>$v) {
             if($n=='header') {
@@ -127,10 +124,6 @@ class TextHtml
             unset($slot, $cs, $n);
         }
         unset($co, $lc, $slots);
-
-        if(\Birds\Schema::$cms) {
-            \Birds\App::$response->items[1]->append .= '<script>Modernizr.load([{test:("bird" in window),nope:"'.\Birds\Schema::$cms.'.js?'.\Birds\App\Layout::$vars['$BIRD_ENV'].'",complete:function(){Modernizr.load([{test:window.Bird,yep:["'.\Birds\Schema::$cms.'/bird.js?Cms,'.\Birds\App\Layout::$vars['$BIRD_ENV'].'","/_b/bird-cms.css?'.\Birds\App\Layout::$vars['$BIRD_ENV'].'"],complete:function(){if("bird" in window)bird.ready();}}])}}]);</script>';
-        }
 
         \Birds\App\Route::$active=null;
         unset($route);

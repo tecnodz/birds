@@ -39,8 +39,8 @@ class App
         $cfg=self::configFiles();
         array_unshift($cfg, bird::env());
         $this->config = bird::recursiveReplace(
-            array('$BIRD_ROOT', '$BIRD_APP_ROOT', '$BIRD_VAR', '$BIRD_VERSION', '$BIRD_SITE_ROOT', '$BIRD_TIME'),
-            array(  BIRD_ROOT,    BIRD_APP_ROOT,    BIRD_VAR,    BIRD_VERSION,    BIRD_SITE_ROOT,    BIRD_TIME),
+            array('$BIRD_ROOT', '$BIRD_APP_ROOT', '$BIRD_VAR', '$BIRD_VERSION', '$BIRD_SITE_ROOT', '$BIRD_TIME', '$BIRD_ENV'),
+            array(  BIRD_ROOT,    BIRD_APP_ROOT,    BIRD_VAR,    BIRD_VERSION,    BIRD_SITE_ROOT,    BIRD_TIME,    bird::env()),
             call_user_func_array('Birds\\bird::config', $cfg)
         );
         unset($cfg);

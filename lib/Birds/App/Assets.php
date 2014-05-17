@@ -81,7 +81,7 @@ class Assets
         } else {
             $ext = Route::mimeType($format);
         }
-        $root = BIRD_ROOT.'/lib/Birds/App/Resources/'.$ext;
+        $root = BIRD_ROOT.'/data/web/_/'.$ext;
         $sf = array($root.$f);
         if(!file_exists($sf[0])) {
             throw new HttpException(404);
@@ -96,8 +96,12 @@ class Assets
         unset($f);
         $lmod = filemtime($sf[0]);
         $req = \Birds\App::request();
-        if(isset($req['query-string']) && $req['query-string']!='' && preg_match('#^[/a-z0-9\-\_\,]+$#i', $req['query-string'])) {
-            foreach(preg_split('#,#', $req['query-string'], null, PREG_SPLIT_NO_EMPTY) as $f) {
+        if(isset($req['query-string']) && $req['query-string']!='') {
+            $q = preg_replace('#[^/a-z0-9\-\_\,]+#i', '', $req['query-string']);
+        }
+        unset($req);
+        if(isset($q)) {
+            foreach(preg_split('#,#', $q, null, PREG_SPLIT_NO_EMPTY) as $f) {
                 if(file_exists($f=$root.'/'.$f.'.'.$ext)) {
                     $mod=filemtime($f);
                     if($mod > $lmod) {
