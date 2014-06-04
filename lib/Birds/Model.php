@@ -189,7 +189,36 @@ class Model extends Data
     public function relation($r)
     {
         if(!isset($this->$r)) {
-            $this->$r = Data::handler(get_called_class())->getRelation($r, null, array($this->asArray('primary')));
+            $i=0;
+            $rn = $r;
+            if(strpos($rn, '.')) {
+                $rns  = explode('.', $rn);
+                $rn = array_shift($rns);
+            }
+            $schema = $this->schema();
+            if(!isset($schema->relations[$rn])) {
+                throw new Exception("Relation {$rn} does not exist on {$schema->class}");
+            }
+            $rd = $schema->relations[$rn];
+            unset($schema);
+            if(isset($rns)) { // loop $r to get proper class
+                $cn = array_pop(array_values($rn));
+                $rn = implode('.',array_reverse($rn)).'.';
+            } else {
+                $cn = (isset($rd['class']))?($rd['class']):($rn);
+                $rn = '';
+            }
+            if($rd['type']=='many') $i=null;
+            if(is_array($rd['local'])) {
+                $o=array('where'=>array());
+                foreach($rd['local'] as $k=>$v) {
+                    $o['where']["{$rn}{$rd['foreign'][$k]}"] = $this->$v;
+                    unset($k,$v);
+                }
+            } else {
+                $o=array('where'=>array("{$rn}{$rd['foreign']}"=>$this->{$rd['local']}));
+            }
+            $this->$r = Data::handler($cn)->find($o);
         }
         return $this->$r;
     }
@@ -264,7 +293,6 @@ class Model extends Data
     {
         $this->$name = $value;
         return $this;
-        bird::debug(__METHOD__, $name, $value);
         if($name=='ROWSTAT') return $this;
         $mn=bird::camelize($name, true);
         try {

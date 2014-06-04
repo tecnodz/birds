@@ -33,7 +33,7 @@ class Sql
 
     public function __toString()
     {
-        return (string) $this->name;
+        return (string) $this->buildQuery();
     }
 
     public static function connect($n='', $exception=true, $tries=3)
@@ -246,58 +246,6 @@ class Sql
     {
         $this->_offset = (int) $o;
         return $this;
-    }
-
-    public function getRelation($r, $schema=null, $rrp=array(), $i=0)
-    {
-        if(!is_array($r)) {
-            $r = explode('.', $r);
-        }
-        if(is_null($schema)) $schema = $this->schema();
-        $rn = array_shift($r);
-        if(!isset($schema->relations[$rn])) {
-            throw new Exception("Relation {$rn} does not exist on {$sc->class}");
-        }
-        if($schema->relations[$rn]['type']=='many') $i=null;
-        $ccn = $schema->class;
-        $rcn = (isset($schema->relations[$rn]['class']))?($schema->relations[$rn]['class']):($rn);
-        $rschema = \Birds\Schema::load($rcn);
-        if(!isset($rschema->relations[$ccn])) {
-            $found = false;
-            foreach($rschema->relations as $k=>$v) {
-                if(isset($v['class']) && $v['class']==$ccn) {
-                    $ccn = $v['class'];
-                    unset($k, $v);
-                    $found = true;
-                    break;
-                }
-                unset($k, $v);
-            }
-            if(!$found) {
-                $rschema->relations[$ccn] = array(
-                    'local'=>$schema->relations[$rn]['foreign'], 
-                    'foreign'=>$schema->relations[$rn]['local'], 
-                    'type'=>(!is_array($schema->relations[$rn]['local']) && isset($schema->columns[$schema->relations[$rn]['local']]['primary']))?('one'):('many'),
-                );
-            }
-            unset($found);
-        }
-        if(!is_array($rrp)) $rrp = array($rrp);
-        array_unshift($rrp, $ccn);
-        if(count($r)>0) {
-            return $this->getRelation($r, $rschema, $rrp);
-        }
-
-        // return reverse find
-        $w = array_pop($rrp);
-        $o=array('where'=>array());
-        $rrp = implode('.', $rrp);
-        foreach($w as $k=>$v) {
-            $o['where']["{$rrp}.{$k}"] = $v;
-            unset($k,$v);
-        }
-        unset($rrp, $w, $schema, $rschema, $ccn, $rn, $r);
-        return \Birds\Data::handler($rcn)->find($o)->fetch($i);
     }
 
     private function getFunctionNext($fn)

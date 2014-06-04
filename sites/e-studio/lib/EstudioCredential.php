@@ -11,9 +11,7 @@
  * @license   not defined
  * @link      https://tecnodz.com/
  */
-namespace Estudio;
-class Credential extends \Birds\Model
+class EstudioCredential extends Estudio\Credential
 {
     public static $schemaid='estudio_credential';
-    protected $assign, $role, $id, $require, $certificate, $http, $group, $user, $ip, $modified;
 }

@@ -153,6 +153,7 @@ class Schema extends Data
                 $sc = (property_exists($s, 'schemaid'))?($s::$schemaid):(str_replace(array('\\', '/'), '.', $s));
                 $d = bird::app()->Birds['schema-dir'];
                 $f = \bird::isReadable($d, $sc.'.yml');
+                \bird::log(__METHOD__.','.__LINE__.': '.$f, $d, $sc);
                 if($f) {
                     Cache::set('schema/'.$s, $f);
                     self::$instances[$s] = Yaml::read($f, null, null, $cn);

@@ -1,6 +1,6 @@
 <?php
 /**
- * E-studio Content Managemt System: pages
+ * E-studio Content Managemt System: content
  *
  * PHP version 5.3
  *
@@ -11,9 +11,7 @@
  * @license   not defined
  * @link      https://tecnodz.com/
  */
-namespace Estudio;
-class Content extends \Birds\Model
+class EstudioContent extends Estudio\Content
 {
     public static $schemaid='estudio_content';
-    protected $page, $id, $slot, $priority, $class, $method, $params, $content, $prepare, $modified, $published, $EstudioPage;
 }

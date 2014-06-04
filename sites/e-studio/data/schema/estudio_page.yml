@@ -1,0 +1,57 @@
+---
+class: EstudioPage
+connection: e-studio
+table: estudio_page
+columns:
+  id:
+    type: int
+    min: 0
+    increment: auto
+    "null": false
+    primary: true
+  url:
+    type: string
+    size: "150"
+    "null": false
+  language:
+    type: string
+    size: "5"
+    "null": false
+  title:
+    type: string
+    size: "250"
+    "null": true
+  formats:
+    type: string
+    size: "250"
+    "null": true
+  script:
+    type: string
+    size: "250"
+    "null": true
+  stylesheet:
+    type: string
+    size: "250"
+    "null": true
+  multiview:
+    type: int
+    max: 128
+    "null": true
+  created:
+    type: datetime
+    "null": false
+  modified:
+    type: datetime
+    "null": false
+  published:
+    type: datetime
+    "null": true
+relations:
+  EstudioContent:
+    local: id
+    foreign: page
+    type: many
+scope:
+  primary:
+  - id
+...

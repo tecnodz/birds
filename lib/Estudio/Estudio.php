@@ -96,5 +96,15 @@ class Estudio
         if($format=='text/html')
             return '<h1>Birds</h1>';
     }
+
+
+    public static function cms($format='text/html')
+    {
+        try{
+            return \EstudioPage::match(\bird::scriptName())->render($format);
+        } catch(Exception $e) {
+            \bird::debug(__METHOD__."\n".$e);
+        }
+    }
 }
 

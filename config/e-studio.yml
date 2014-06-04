@@ -1,0 +1,9 @@
+---
+all:
+  Birds:
+    apps-dir: .
+    document-root: ../htdocs
+    languages: [ pt, en ]
+    language: ~
+    routes-dir:  "$BIRD_SITE_ROOT/data/web:$BIRD_APP_ROOT/data/web:$BIRD_ROOT/sites/e-studio/data/web:$BIRD_ROOT/data/web"
+    cms: '/_e'

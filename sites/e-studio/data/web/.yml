@@ -1,0 +1,10 @@
+---
+options:
+  multiviews: true
+formats: [ text/html, "*" ]
+content:
+  body:
+    -
+      class: Estudio
+      method: cms
+...

@@ -1,0 +1,56 @@
+---
+class: EstudioContent
+connection: e-studio
+table: estudio_content
+columns:
+  page:
+    type: int
+    min: 0
+    "null": false
+    primary: true
+  id:
+    type: int
+    min: 0
+    "null": false
+    primary: true
+  slot:
+    type: string
+    size: "45"
+    "null": false
+  priority:
+    type: int
+    "null": false
+  class:
+    type: string
+    size: "90"
+    "null": true
+  method:
+    type: string
+    size: "45"
+    "null": true
+  params:
+    type: string
+    size: ""
+    "null": true
+  content:
+    "null": true
+  prepare:
+    type: int
+    max: 128
+    "null": true
+  modified:
+    type: datetime
+    "null": false
+  published:
+    type: datetime
+    "null": true
+relations:
+  EstudioPage:
+    local: page
+    foreign: id
+    type: one
+scope:
+  primary:
+  - page
+  - id
+...

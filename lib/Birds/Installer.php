@@ -30,7 +30,7 @@
 namespace Birds;
 class Installer
 {
-    protected static $root=BIRD_ROOT, $apps=BIRD_APP_ROOT, $site='';
+    protected static $root=BIRD_ROOT, $apps=BIRD_APP_ROOT, $site='', $app='tdz';
     public static function install()
     {
         self::gitUpdate();
@@ -40,6 +40,7 @@ class Installer
             'site'=>false,
             'document-root'=>false,
             'domain'=>array(),
+            'app'=>false,
         );
         foreach($r['argv'] as $p) {
             if(preg_match('/^\-\-([a-z\-]+)=(.+)/', $p, $m)) {
@@ -65,6 +66,20 @@ class Installer
             if($o['apps-dir']) {
                 $installed=true;
                 self::installApps($o['apps-dir']);
+            }
+            if($o['app']) {
+                $o['app'] = bird::slug($o['app'],'_-');
+                if(is_dir(self::$root."/sites/{$o['app']}")) {
+                    self::$app = $o['app'];
+                    if(!$o['site']) {
+                        $sites = glob(self::$apps.'/sites/*', GLOB_ONLYDIR);
+                        if(count($sites)==1) $o['site'] = basename(implode('', $sites));
+                        else App::output("\n  You should specify at least one site to install this {$o['app']}.\n");
+                    }
+                } else {
+                    App::output("\n  Application {$o['app']} was not found.\n\n");
+                }
+
             }
             if($o['site']) {
                 $installed=true;
@@ -148,10 +163,15 @@ class Installer
             mkdir(self::$apps.'/sites', 0777, true);
         }
         if($site && !is_dir(self::$apps.'/sites/'.$site)) {
-            system("cp -rp ".self::$root."/sites/tdz ".self::$apps."/sites/{$site}");
+            system("cp -rpn ".self::$root.'/sites/'.self::$app.' '.self::$apps."/sites/{$site}");
         }
         if(!is_dir(self::$apps.'/config/sites')) {
             mkdir(self::$apps.'/config/sites', 0777, true);
+        }
+        if(!file_exists(self::$apps.'/config/'.$site.'.yml')) {
+            copy(self::$root.'/config/'.self::$app.'.yml', self::$apps.'/config/'.$site.'.yml');
+        } else {
+            Yaml::append(self::$apps.'/config/'.$site.'.yml', Yaml::read(self::$root.'/config/'.self::$app.'.yml'));
         }
         self::$site = $site;
     }
@@ -179,8 +199,9 @@ class Installer
                 chdir(BIRD_APP_ROOT);
             }
         } else if($cwd!=BIRD_ROOT) {
-            if($cwd!=BIRD_APP_ROOT) {
-                chdir(BIRD_APP_ROOT);
+            return;
+            if($cwd!=BIRD_ROOT) {
+                chdir(BIRD_ROOT);
             }
         }
         exec('git pull && git submodule init && git submodule update && git submodule status', $err);

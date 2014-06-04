@@ -52,6 +52,9 @@ class Installer
             if(!isset($o['table'][0])) {
                 if(!$o['connection']) {
                     $dbs = \bird::app()->Data;
+                    if(!$dbs) {
+                        \Birds\App::output("The database connection is not configured, exiting.\n\n", true);
+                    }
                     foreach($dbs as $n=>$a) {
                         $cn = (isset($a['class']))?($a['class']):('Birds\\Data\\'.ucfirst(substr($a['dsn'], 0, strpos($a['dsn'], ':'))));
                         $o['table'] = array_merge($o['table'], $cn::getTables($cn::connect($n)));
