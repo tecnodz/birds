@@ -5,11 +5,12 @@ Birds Model
 Models are an ORM abstraction for the database — Birds aims to handle multiple types of databases simultaneously. For every model there must be a schema definition with details on the table structure, relationships, triggers (events) and custom column collections (scopes).
 
 If we have, for example, the following table:
-+--------------------------------------------------------------------------+
+
+|--------------------------------------------------------------------------|
 | **page**                                                                 |
-+------------+---------------------+------+-----+---------+----------------+
+|------------|---------------------|------|-----|---------|----------------|
 | Field      | Type                | Null | Key | Default | Extra          |
-+------------+---------------------+------+-----+---------+----------------+
+|------------|---------------------|------|-----|---------|----------------|
 | id         | bigint(19) unsigned | NO   | PRI | NULL    | auto_increment |
 | url        | varchar(150)        | NO   | MUL | NULL    |                |
 | language   | varchar(5)          | NO   |     | NULL    |                |
@@ -21,11 +22,11 @@ If we have, for example, the following table:
 | created    | datetime(6)         | NO   |     | NULL    |                |
 | modified   | datetime(6)         | NO   | MUL | NULL    |                |
 | published  | datetime(6)         | YES  | MUL | NULL    |                |
-+------------+---------------------+------+-----+---------+----------------+
+|--------------------------------------------------------------------------|
 
 It would be translated, as a schema in Yaml:
 
-...yaml
+```yaml
 ---
 class: Page
 table: page
@@ -46,16 +47,16 @@ relations:
 scope:
   primary: [ id ]
   route: [ uid, url, language, formats, options, meta, content ]
-...
+```
 
 That would be available as the class `Page`:
 
-...php
+```php
 class Page extends Birds\Model
 {
     public static $schemaid='page';
     protected $id, $url, $language, $title, $formats, $script, $stylesheet, $multiviews, $created, $modified, $published, $Content;
 }
-...
+```
 
 That is enough to enable Birds to handle most actions to lookup, review and manage its contents.
