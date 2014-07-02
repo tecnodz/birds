@@ -6,9 +6,8 @@ Models are an ORM abstraction for the database — Birds aims to handle multiple
 
 If we have, for example, the following table:
 
-|--------------------------------------------------------------------------|
-| **page**                                                                 |
-|------------|---------------------|------|-----|---------|----------------|
+**page** table
+
 | Field      | Type                | Null | Key | Default | Extra          |
 |------------|---------------------|------|-----|---------|----------------|
 | id         | bigint(19) unsigned | NO   | PRI | NULL    | auto_increment |
@@ -22,7 +21,7 @@ If we have, for example, the following table:
 | created    | datetime(6)         | NO   |     | NULL    |                |
 | modified   | datetime(6)         | NO   | MUL | NULL    |                |
 | published  | datetime(6)         | YES  | MUL | NULL    |                |
-|--------------------------------------------------------------------------|
+
 
 It would be translated, as a schema in Yaml:
 
