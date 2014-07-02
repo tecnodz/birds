@@ -114,6 +114,11 @@ class Route
         }
     }
 
+    public static function create($o)
+    {
+        return new Route($o);
+    }
+
     public function render($format=null)
     {
         if(is_null($format) && !is_null($this->format)) $format=$this->format;

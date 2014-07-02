@@ -229,9 +229,11 @@ class Model extends Data
         $r = array();
         $fs = $cn::scope($scope);
         if(!$fs) return $r;
-        foreach($fs as $c) {
-            $r[$c] = $this->$c;
-            unset($c);
+        foreach($fs as $i=>$c) {
+            if(is_int($i)) $i=$c;
+            $r[$i] = $this->$c;
+            if(is_object($r[$i]) && method_exists($r[$i], 'fetchArray')) $r[$i]=$r[$i]->fetchArray();
+            unset($i, $c);
         }
         return $r;
     }

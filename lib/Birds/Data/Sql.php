@@ -84,11 +84,12 @@ class Sql
 
     public function find($options=array())
     {
+        $this->_select = $this->_where = $this->_groupBy = $this->_orderBy = $this->_limit = $this->_offset = null;
         $sc = $this->schema();
         $this->_alias = array($sc['class']=>'a');
         $this->_from = $sc['table'].' as a';
+        if(isset($sc['defaults']['find'])) $this->filter($sc['defaults']['find']);
         unset($sc);
-        $this->_select = $this->_where = $this->_groupBy = $this->_orderBy = $this->_limit = $this->_offset = null;
         $this->filter($options);
         return $this;
     }
@@ -139,11 +140,27 @@ class Sql
         return $this->query($this->buildQuery(), \PDO::FETCH_CLASS, $this->schema('class'), array($prop));
     }
 
+    public function fetchArray($i=null)
+    {
+        if(!is_null($i)) {
+            $this->_offset = $i;
+            $this->_limit = 1;
+            return array_shift($this->query($this->buildQuery(), \PDO::FETCH_ASSOC));
+        }
+        return $this->query($this->buildQuery(), \PDO::FETCH_ASSOC);
+    }
+
     public function count($column='1')
     {
         if(!$this->_schema) return false;
         $r = $this->queryColumn($this->buildQuery(true));
         return (int) array_shift($r);
+    }
+
+    public function select($o)
+    {
+        $this->_select = null;
+        return $this->addSelect($o);
     }
 
     public function addSelect($o)

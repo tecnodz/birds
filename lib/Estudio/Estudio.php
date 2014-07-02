@@ -101,7 +101,9 @@ class Estudio
     public static function cms($format='text/html')
     {
         try{
-            return \EstudioPage::match(\bird::scriptName())->render($format);
+            return \EstudioPage::match(\bird::scriptName(true))->render($format);
+        } catch(\Birds\App\HttpException $e) {
+            \bird::app()->error($e->getCode(), $format);
         } catch(Exception $e) {
             \bird::debug(__METHOD__."\n".$e);
         }
