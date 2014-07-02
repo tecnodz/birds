@@ -16,4 +16,14 @@ class Content extends \Birds\Model
 {
     public static $schemaid='estudio_content';
     protected $page, $id, $slot, $priority, $class, $method, $params, $content, $prepare, $modified, $published, $EstudioPage;
+
+    public function getUid()
+    {
+        return $this->page.':'.$this->id;
+    }
+
+    public function getPrepare()
+    {
+        return (bool) $this->prepare;
+    }
 }

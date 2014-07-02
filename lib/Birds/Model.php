@@ -40,6 +40,7 @@ class Model extends Data
 
         if(!$o) $o = array();
         if(!is_null($scope)) $o['scope'] = $scope;
+        \bird::debug(var_export($cn::find($o), true));
         return implode('', $cn::find($o)->fetch());
     }
 

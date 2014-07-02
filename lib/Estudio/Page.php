@@ -15,7 +15,7 @@ namespace Estudio;
 class Page extends \Birds\Model
 {
     public static $schemaid='estudio_page';
-    protected $id, $url, $language, $title, $formats, $script, $stylesheet, $multiview, $created, $modified, $published, $EstudioContent;
+    protected $id, $url, $language, $title, $formats, $script, $stylesheet, $multiviews, $created, $modified, $published, $EstudioContent;
 
 
     public static function match($url, $exception=true)
@@ -57,10 +57,15 @@ class Page extends \Birds\Model
         }
     }
 
+    public function getUid()
+    {
+        return (int) $this->id;
+    }
+
     public function getOptions()
     {
         $o=array();
-        $l=array('multiview','shell');
+        $l=array('multiviews','shell');
         foreach($l as $n) {
             if(isset($this->$n)) {
                 $o[$n] = (bool) $this->$n;
@@ -91,12 +96,15 @@ class Page extends \Birds\Model
 
     public function getContent()
     {
-        $C = $this->relation('EstudioContent')->select(\EstudioContent::scope('route'))->fetchArray();
+        $C = $this->relation('EstudioContent')->fetch();
+        //$C = $this->relation('EstudioContent')->select(\EstudioContent::scope('route'))->fetchArray();
         $r=array();
         foreach($C as $i=>$c) {
             if(!$c['slot']) $c['slot'] = 'body';
-            $r[$c['slot']][] = $c;
+            $r[$c['slot']][] = $c->asArray('route');
+            unset($C[$i], $i, $c);
         }
+        unset($C);
         return $r;
     }
 
@@ -106,6 +114,7 @@ class Page extends \Birds\Model
         $f = $d.$this->url.'.yml';
         $a = $this->asArray('route');
         if(!$a['formats']) $a['formats']=$this->getFormats();
+
         if(!file_exists($f) || filemtime($f)<strtotime($this->modified))
             \Birds\Yaml::save($f, $a);
         unset($f);
