@@ -1,4 +1,4 @@
-/*! Birdz v0.1 | (c) 2013 Capile Tecnodesign <ti@tecnodz.com> */
+/*! Birds v0.2 | (c) 2014 Capile Tecnodesign <ti@tecnodz.com> */
 window.requestAnimFrame = (function(){
   return  window.requestAnimationFrame       ||
           window.webkitRequestAnimationFrame ||
@@ -16,7 +16,7 @@ window.bird = {
     created: new Date(),
     online: navigator.onLine,
     root: document.getElementsByTagName('body')[0],
-    base: null,
+    base: '/__',
     plugins: [],
     onReady: [],
     css: '',
@@ -45,7 +45,20 @@ window.bird = {
           });
         }
     },
-
+    //Returns true if it is a DOM node
+    isNode: function(o){
+        return (
+            typeof Node === "object" ? o instanceof Node : 
+            o && typeof o === "object" && typeof o.nodeType === "number" && typeof o.nodeName==="string"
+        );
+    },
+    //Returns true if it is a DOM element    
+    isElement: function(o){
+      return (
+            typeof HTMLElement === "object" ? o instanceof HTMLElement : //DOM2
+            o && typeof o === "object" && o !== null && o.nodeType === 1 && typeof o.nodeName==="string"
+        );
+    },
     ready: function(fn)
     {
         if(arguments.length>0) {
@@ -61,11 +74,20 @@ window.bird = {
 
     load: function()
     {
+        bird.isReady = true;// fix this
         var i=arguments.length;
         while(i-- >0) {
             if(arguments[i].indexOf('.css')>-1) bird.element.call(document.getElementsByTagName('head')[0], {e:'link',a:{rel:'stylesheet',type:'text/css',href:arguments[i]}});
-            else bird.element.call(document.body, {e:'script',p:{async:true,src:arguments[i]}});
+            else if(arguments[i].indexOf('.js')>-1) bird.element.call(document.body, {e:'script',p:{async:true,src:arguments[i]}});
+            else {
+                var p=arguments[i].indexOf('?'),f=(p>0)?(arguments[i].substr(0,p)):(arguments[i]), qs=(p>0)?(arguments[i].substr(p)):('');
+                bird.load(bird.base+'/'+f+'.css'+qs, bird.base+'/'+f+'.js'+qs);
+                delete(p);
+                delete(f);
+                delete(qs);
+            }
         }
+        delete(i);
     },
 
     error: function() 

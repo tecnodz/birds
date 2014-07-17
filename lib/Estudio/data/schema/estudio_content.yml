@@ -50,10 +50,6 @@ relations:
     foreign: id
     type: one
 scope:
-  primary:
-  - page
-  - id
-defaults:
-  find:
-    orderBy: [ priority, id, slot ]
+  primary: [ page, id ]
+  route: [ slot, class, method, params, content, prepare ]
 ...

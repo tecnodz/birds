@@ -1,5 +1,6 @@
 /*! Bird CMS version v0.1 | (c) 2013 Capile Tecnodesign <ti@tecnodz.com> */
-(function(z){
+(function(){
+var c=0;
 bird.e = function()
 {
     console.log('omnibox search!!', this, this.value);
@@ -72,6 +73,7 @@ function fly()
 function toolbar()
 {
     if(cms.space) return;
+    console.log('olá!!!');
     cms.space=bird.element.call(document.body,{e:'div',a:{id:'e-space','class':'e-studio e-animated'},c:[
         {e:'span',a:{'class':'e-icon-e'}},
         {e:'form',a:{id:'f-omnibox','class':'e-inline',action:'#',onsubmit:'return bird.e.apply(this)'},c:[
@@ -89,13 +91,13 @@ function search()
 
 function land(){
 }
-
+if(!bird.cms) bird.cms = { url: '/_e' };
 var cms={
     ready:true,
-    enabled: (window.location.href.indexOf(z.cms)!==0),
+    enabled: true,
     active: false,
     data:(enableLocalStorage())?(window.localStorage):({}),
-    base: z.cms,
+    base: bird.cms.url,
     space: null,
 };
 
@@ -107,5 +109,6 @@ function enableLocalStorage() {
   }
 }
 
+
 bird.ready(fly);
-})(window.eStudio);
+})();
