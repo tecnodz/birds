@@ -45,6 +45,8 @@ class Assets
             $cd = array(\Birds\bird::app()->Birds['document-root'], $cd);
         }
         $f = \bird::file($cd, $url);
+        //\bird::debug($url, var_export(\Birds\Cache\Wrapper::stat('cache:/web'.$url), true));
+        if(!$f && !file_exists($f='cache://web'.$url)) $f = false;
         unset($url, $cd);
         if($f) {
             // todo: search for urlparameters in file name, like used for optimizing images
@@ -182,11 +184,11 @@ class Assets
             }
         }
         if ($gzip) {
-            $gzf=BIRD_VAR . '/cache/download/' . md5_file($file);
-            if (!file_exists($gzf) || filemtime($gzf) < $lastmod) {                
-                $s = file_get_contents($file);
-                $gz = gzencode($s, 9);
-                \Birds\bird::save($gzf, $gz, true);
+            //$gzf=BIRD_VAR . '/cache/download/' . md5_file($file);
+            $gzf = (substr($file, 0, 7)=='cache:/')?($file.'.gz'):('cache://gzip/'.md5($file));
+            if (!file_exists($gzf) || filemtime($gzf) < $lastmod) {
+                file_put_contents($gzf, gzencode(file_get_contents($file), 9));
+                //\Birds\bird::save($gzf, $gz, true);
             }
             $gze = 'gzip';
             if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'x-gzip') !== false)

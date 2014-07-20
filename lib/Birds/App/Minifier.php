@@ -47,14 +47,20 @@ class Minifier
             if(substr($url,0,strlen($bd))==$bd) {
                 return $url;
             }
+            unset($bd);
             $abs=false;
         }
-        if($root && file_exists($f=$root.$url)) {
-        } else {
+        if(!($root && file_exists($f=$root.$url))) {
             $app = \Birds\bird::app()->Birds;
-            $a = (is_array($app['routes-dir']))?(array_merge(array($app['document-root']), $app['routes-dir'])):(array($app['document-root'], $app['routes-dir']));
-            $f = \bird::file($a, $url, 'r');
-            unset($app, $a);
+            if(!file_exists($f=$app['document-root'].$url)) {
+                if(is_array($app['routes-dir'])) {
+                    $f = \bird::file($app['routes-dir'], $url, 'r');
+                }
+                if(!$f && !file_exists($f='cache://web'.$url)) {
+                    $f = false;
+                }
+            }
+            unset($app);
         }
         return $f;
     }
@@ -125,18 +131,9 @@ class Minifier
                     if(!$fn || filemtime($fn)<max(${$type})) { // generate
                         if(!$fn) {
                             if (!($fn=\bird::isWritable(\Birds\bird::app()->Birds['document-root'].self::$assetsUrl.'/'.$f))
-                             && !($fn=\bird::isWritable(\Birds\bird::app()->Birds['routes-dir'], self::$assetsUrl.'/'.$f))
+                            // && !($fn=\bird::isWritable(\Birds\bird::app()->Birds['routes-dir'], self::$assetsUrl.'/'.$f))
                             ) {
-                                // cannot combine...
-                                /*
-                                if($type=='css') {
-                                    if($before) $r = '<link rel="stylesheet" type="text/css" href="'.self::$assetsUrl.'/'.$f.'?'.$time.'" />'.$r;
-                                    else $r .= '<link rel="stylesheet" type="text/css" href="'.self::$assetsUrl.'/'.$f.'?'.$time.'" />';
-                                } else {
-                                    if($before) $r = '<script src="'.self::$assetsUrl.'/'.$f.'?'.$time.'"></script>'.$r;
-                                    else $r .= '<script src="'.self::$assetsUrl.'/'.$f.'?'.$time.'"></script>';
-                                }
-                                */
+                                $fn = 'cache://web'.self::$assetsUrl.'/'.$f;
                             }
                         }
                         if($fn) {
@@ -164,7 +161,7 @@ class Minifier
 
     public static function combine($fs, $fn, $type, $compress=true)
     {
-        if(!is_writable($fn) && !is_writable(dirname($fn))) {
+        if(substr($fn, 0, 7)!=='cache:/' && !is_writable($fn) && !is_writable(dirname($fn))) {
             return false;
         }
         if(!is_array($fs)) {
@@ -190,24 +187,34 @@ class Minifier
             unset($lc);
         }
         $combine = true;
+        $tmpd = (strpos($fn, ':/'))?('/dev/null'):(dirname($fn));
         if($compress){
             // try yui compressor
-            $tmp = tempnam(dirname($fn), '.'.basename($fn));
+            $tmp = tempnam($tmpd, '.'.basename($fn));
             $cmd = self::$paths['cat'].' '.implode(' ',$fs).' | '.self::$paths['java'].' -jar '.BIRD_ROOT.'/lib/yui/yuicompressor.jar --type '.$type.' -o '.$tmp;
             exec($cmd, $output, $ret);
             if(file_exists($tmp)) {
-                if(rename($tmp,$fn)) {
-                    // $fn was minified -- no need to make it manually
-                    chmod($fn, 0666);
-                    $combine = false;
+                if(strpos($fn, ':/')) {
+                    if(file_put_contents($fn, file_get_contents($tmp))) {
+                        $combine = false;
+                        @unlink($tmp);
+                    } else {
+                        return false;
+                    }
                 } else {
-                    @unlink($tmp);
+                    if(rename($tmp,$fn)) {
+                        // $fn was minified -- no need to make it manually
+                        chmod($fn, 0666);
+                        $combine = false;
+                    } else {
+                        @unlink($tmp);
+                    }
                 }
             }
         }
         if($combine){
             // atomic writes
-            $tmp = tempnam(dirname($fn), '.' . basename($fn));
+            $tmp = tempnam($tmpd, '.' . basename($fn));
 
             foreach($fs as $i=>$fname) {
                 if($i == 0) {

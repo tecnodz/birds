@@ -30,6 +30,7 @@
 namespace Birds;
 class Cache
 {
+    public static $timeout = 7200;
     private static $_storage=null;
     /**
      * Cache key used for storing this site information in memory, must be a 
@@ -51,7 +52,7 @@ class Cache
                 unset($ckey, $ret2);
             }
         } else {
-            $ret = $cn::lastModified($ckey, $expires);
+            $ret = $cn::lastModified($key, $expires);
         }
         unset($fn, $key, $expires, $method);
         return $ret;
@@ -167,5 +168,6 @@ class Cache
         
     }
     
-
 }
+
+stream_wrapper_register('cache', '\\Birds\\Cache\\Wrapper');
