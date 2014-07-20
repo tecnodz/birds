@@ -50,11 +50,13 @@ class Wrapper
 
     public function stream_open($url, $mode, $options, &$opened_path)
     {
-        $this->url_stat($url);
         $this->p = 0;
         if(strpos($mode, 'w')!==false && isset(self::$val[$this->key])) {
+            $this->url($url);
             self::$val[$this->key]='';
             $this->w = true;
+        } else {
+            $this->url_stat($url, null, true);
         }
         return true;
     }
@@ -71,9 +73,6 @@ class Wrapper
         if(!isset(self::$val[$this->key])) self::$val[$this->key]='';
         self::$val[$this->key] .= $s;
         $this->w = true;
-        //$left = substr(self::$val[$this->key], 0, $this->p);
-        //$right = substr(self::$val[$this->key], $this->p + strlen($s));
-        //self::$val[$this->key] = $left . $s . $right;
         $this->p += strlen($s);
         return strlen($s);
     }
@@ -135,14 +134,6 @@ class Wrapper
 
     public function stream_metadata($path, $option, $var) 
     {
-        if($option == STREAM_META_TOUCH) {
-            $url = parse_url($path);
-            $varname = $url["host"];
-            if(!isset($GLOBALS[$varname])) {
-                $GLOBALS[$varname] = '';
-            }
-            return true;
-        }
         return false;
     }
 
@@ -153,14 +144,10 @@ class Wrapper
      * @param int $flags
      * @return array
      */
-    public function url_stat ($url, $flags=null)
+    public function url_stat ($url, $flags=null, $fetch=false)
     {
-        if(substr($url, 0, 7)=='cache:/') {
-            $this->cn = '\\Birds\\Cache';
-            $url = substr($url, 7);
-        }
-        if(is_null($this->stat) || $this->key!=$url) {
-            $this->key = $url;
+        if(is_null($this->stat) || ($this->key!=$url && 'cache:/'.$this->key!=$url)) {
+            $url = $this->url($url);
             $cn = $this->cn;
             $m = $cn::lastModified($url, \Birds\Cache::$timeout);
             if($m===false) {
@@ -168,7 +155,7 @@ class Wrapper
             } else {
                 $m = (int) $m;
             }
-            self::$val[$this->key] = $cn::get($url, \Birds\Cache::$timeout);
+            if($fetch) self::$val[$this->key] = $cn::get($url, \Birds\Cache::$timeout);
             $this->stat = array(
               'dev' => 1,
               'ino' => 1,
@@ -177,7 +164,7 @@ class Wrapper
               'uid' => 1,
               'gid' => 1,
               'rdev' => 1,
-              'size' => strlen(self::$val[$this->key]),
+              'size' => ($fetch)?(strlen(self::$val[$this->key])):(10000),
               'atime' => $m,
               'mtime' => $m,
               'ctime' => $m,
@@ -193,6 +180,16 @@ class Wrapper
     {
         if($this->stat) return $this->stat;
         return false;
+    }
+
+    public function url($url)
+    {
+        if(substr($url, 0, 7)=='cache:/') {
+            $this->cn = '\\Birds\\Cache';
+            $url = substr($url, 7);
+        }
+        $this->key = $url;
+        return $url;
     }
 
     public static function stat($url)

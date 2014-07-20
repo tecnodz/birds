@@ -105,7 +105,6 @@ class Cache
         return $ret; 
     }
 
-
     /**
      * Sets currently stored key-pair value
      *
