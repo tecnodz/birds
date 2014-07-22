@@ -39,6 +39,7 @@ class Route
         $formats=array('text/html'),
         $credentials,
         $multiviews,
+        //$params,
         $shell;
 
 
@@ -103,6 +104,12 @@ class Route
             //$this->layout->formats=$o['formats'];
             $this->formats = $o['formats'];
         }
+        /*
+        if(isset($o['params']) && is_array($o['params'])) {
+            //$this->layout->formats=$o['formats'];
+            $this->params = $o['params'];
+        }
+        */
 
         if(isset($o['options']) && is_array($o['options'])) {
             foreach($o['options'] as $n=>$v) {
@@ -178,7 +185,7 @@ class Route
      *
      * @return Birds\Route object or false if no matches are found.
      */
-	public static function find($route, $updateScriptName=false)
+	public static function find($route, $updateScriptName=false, $checkParent=true)
 	{
         if(is_null(self::$base)) return false;
         $cn = get_called_class();
@@ -212,7 +219,7 @@ class Route
             }
             unset($b, $r);
         }
-        if(!isset($r) && $dir!='/') {
+        if($checkParent && !isset($r) && $dir!='/') {
             $pd=explode('/', substr($dir,1));
             while(isset($pd[0])) {
                 array_pop($pd);

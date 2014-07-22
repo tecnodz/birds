@@ -1,0 +1,20 @@
+---
+meta:
+  title: ~
+  script: [ "/_/js/bird.js", "/_/js/e-studio.js" ]
+  stylesheet: [ "/_/css/e-studio.css" ]
+slots: [ header, body, footer ]
+content:
+  header:
+    -
+      class: Estudio
+      method: header
+      prepare: true
+nodes:
+  html:
+    before: '<!DOCTYPE html>'
+  head:
+    prepend: '<meta charset="utf-8" />'
+    append: '<link type="image/x-icon" href="/_/favicon.ico" rel="icon" /><link type="image/x-icon" href="/_/favicon.ico" rel="shortcut" />'
+options:
+  body-elements: [ header, nav, footer ]

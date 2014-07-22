@@ -3,15 +3,11 @@ options:
   multiviews: true
 formats: [ text/html, text/css, text/plain, application/javascript, image/png, image/jpg, image/gif ]
 language: en
+layout: e-studio.yml
 meta:
   title: e-Studio
   "@language": en
 content:
-  header:
-    -
-      class: Estudio
-      method: header
-      prepare: true
   body:
     -
       class: Estudio

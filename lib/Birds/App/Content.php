@@ -38,7 +38,8 @@ class Content
         $params,
         $credentials,       # content credentials. If fails, the contents is not shown.
         $content,           # rendered content
-        $prepare;           # if true, should be executed before any output is sent
+        $prepare,           # if true, should be executed before any output is sent
+        $require;           # if true, should be executed before any output is sent
 
     /**
      * Content builder

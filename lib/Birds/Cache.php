@@ -30,7 +30,7 @@
 namespace Birds;
 class Cache
 {
-    public static $timeout = 7200;
+    public static $timeout = 0;
     private static $_storage=null;
     /**
      * Cache key used for storing this site information in memory, must be a 

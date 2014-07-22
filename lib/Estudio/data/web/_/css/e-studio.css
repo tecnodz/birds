@@ -3,14 +3,14 @@
 #e-space > span, #e-space form{margin:6px;display:inline-block;}
 #e-space form{position:relative;width:80%;padding:0;}
 .e-right{position:absolute;right:0;}
-#e_omnibox{font-size:24px;color:#ddd;background:none;width:80%;font-weight:normal;margin:0;display:inline-block;border:none;outline:none;}
-#e_omnibox:focus{border:1px solid red;}
+#e_omnibox{font-size:24px;color:#ddd;background:none;width:90%;font-weight:normal;margin:0;display:inline-block;border:none;outline:none;}
+#e_omnibox:focus{color:#f0f0f0;}
 
 .e-animated {
-  -webkit-transition: all 0.3s ease-out;  /* Safari 3.2+, Chrome */
-     -moz-transition: all 0.3s ease-out;  /* Firefox 4-15 */
-       -o-transition: all 0.3s ease-out;  /* Opera 10.5–12.00 */
-          transition: all 0.3s ease-out;  /* Firefox 16+, Opera 12.50+ */
+  -webkit-transition: all 0.1s ease-out;  /* Safari 3.2+, Chrome */
+     -moz-transition: all 0.1s ease-out;  /* Firefox 4-15 */
+       -o-transition: all 0.1s ease-out;  /* Opera 10.5–12.00 */
+          transition: all 0.1s ease-out;  /* Firefox 16+, Opera 12.50+ */
 
 }
 

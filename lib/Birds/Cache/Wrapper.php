@@ -51,7 +51,7 @@ class Wrapper
     public function stream_open($url, $mode, $options, &$opened_path)
     {
         $this->p = 0;
-        if(strpos($mode, 'w')!==false && isset(self::$val[$this->key])) {
+        if(strpos($mode, 'w')!==false) {
             $this->url($url);
             self::$val[$this->key]='';
             $this->w = true;

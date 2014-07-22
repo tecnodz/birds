@@ -6,4 +6,6 @@ all:
     languages: [ pt, en ]
     language: ~
     routes-dir:  "$BIRD_SITE_ROOT/data/web:$BIRD_SITE_ROOT/data/e-studio:$BIRD_APP_ROOT/data/web:$BIRD_ROOT/lib/Estudio/data/web:$BIRD_ROOT/data/web"
+    layout-dir:  "$BIRD_SITE_ROOT/data/layout:$BIRD_APP_ROOT/data/layout:$BIRD_ROOT/lib/Estudio/data/layout:$BIRD_ROOT/data/layout"
     schema-dir:  "$BIRD_SITE_ROOT/data/schema:$BIRD_APP_ROOT/data/schema:$BIRD_ROOT/lib/Estudio/data/schema:$BIRD_ROOT/data/schema"
+    alias-dir:   "$BIRD_SITE_ROOT/data/alias:$BIRD_APP_ROOT/data/alias:$BIRD_ROOT/lib/Estudio/data/alias:$BIRD_ROOT/data/alias"

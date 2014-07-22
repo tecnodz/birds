@@ -223,7 +223,7 @@ window.bird = {
     },
 
     t: function(s) {
-        console.log('t: ', s, bird.t[s]);
+        //console.log('t: ', s, bird.t[s]);
         return bird.t[s] || s;
         if(s in bird.t) return bird.t[s];
         else return s;
@@ -233,13 +233,13 @@ window.bird = {
     reStorableText: /^https?\:\/\/[^\?]+\.(html|svg|xml|json)$/,
     wget: function(url, success, error, dataType, context) {
         var qs='';
-        console.log('wget: '+url);
+        //console.log('wget: '+url);
         if(window.location.protocol=='file:' && url.search(bird.reRemote)<0) {
             if(url.indexOf('?')>1) url = url.substr(0,url.indexOf('?'));
             if(!bird.base) bird.base = window.location.href.replace(/[^\/\\]+$/, '');
             url = bird.base+url;
 
-            console.log('wget (local): '+url);
+            //console.log('wget (local): '+url);
         } else if(url.search(bird.reStorableText)>-1) {
             // external storable files
             // ok, they might be stored, is it enabled?

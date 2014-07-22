@@ -1,0 +1,11 @@
+---
+formats: [ text/html ]
+meta:
+  title: e-Studio
+layout: e-studio.yml
+content:
+  body:
+    -
+      class: Estudio\Schema
+      method: review
+      prepare: true

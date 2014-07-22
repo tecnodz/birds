@@ -121,4 +121,9 @@ class Page extends \Birds\Model
         \Birds\App\Route::create($a)->render($format);
     }
 
+    public static function redirect()
+    {
+        \bird::debug(__METHOD__, func_get_args());
+    }
+
 }

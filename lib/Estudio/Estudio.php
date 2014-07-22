@@ -14,6 +14,9 @@
  */
 class Estudio
 {
+    public static $defaultAction='__/page', $arg;
+    protected static $a=array('q'=>'query');
+
     public static function render($format='text/html')
     {
         \Birds\Schema::$cms = false;
@@ -30,7 +33,7 @@ class Estudio
                     \bird::output('window.eStudio='.json_encode(array(
                         'cms'=>\Birds\bird::fullUrl(\Birds\bird::app()->Birds['cms']),
                         //'css'=>\Birds\bird::$cssPrefix,
-                    ), false).';bird.load("'.\Birds\bird::app()->Birds['cms'].'/e-studio.js'.$qs.'","'.\Birds\bird::app()->Birds['cms'].'/e-studio.css'.$qs.'");', array('Content-Type: '.$format.';charset=utf8'));
+                    ), false).';bird.load("e-studio'.$qs.'");', array('Content-Type: '.$format.';charset=utf8'));
                     //\bird::output('Modernizr.load([{test:window.jQuery,nope:"/_/js/jquery.js"},{load:"'.$base.'/bird.js?Cms",complete:function(){bird.ready()}}]);', array('Content-Type: '.$format.';charset=utf8'));
                 } else {
                     \bird::output('window.eStudio=false;', array('Content-Type: '.$format.';charset=utf8'));
@@ -39,14 +42,16 @@ class Estudio
             if($valid!==true) {
                 throw new \Birds\App\HttpException(403);
             }
-            return \Birds\App\Assets::renderResource($format);
+            return \Birds\App\Assets::renderResource($format, BIRD_ROOT.'/lib/Estudio/data/web/_');
         }
         if($valid!==true) {
             throw new \Birds\App\HttpException(403);
         }
 
         $p =\bird::urlParam();
-        if(count($p)<2) {
+        if(count($p)==1 && isset(self::$a[$p[0]])) {
+            return self::{self::$a[$p[0]]}();
+        } else if(count($p)<2) {
             throw new \Birds\App\HttpException(404);
         }
         try {
@@ -108,5 +113,49 @@ class Estudio
             \bird::debug(__METHOD__."\n".$e);
         }
     }
+
+    public static function query()
+    {
+        $qs = \Birds\App::request('query-string');
+        $r = array('q'=>($p=strpos($qs, '&'))?(urldecode(substr($qs, 0, $p))):(urldecode($qs)));
+
+        self::$arg = \bird::slug($r['q'], '?');
+
+        if(!($action=self::alias(self::$arg, '__/'))) $action = self::$defaultAction;
+        if($action && ($R=Birds\App\Route::find($action, false, false))) {
+            if(Birds\App::request('ajax')) {
+                $r['r'] = $R->getContent('r-body-0');
+            } else {
+                $R->render('text/html');
+                Birds\App::$running = false;
+                Birds\App::end();
+            }
+        }
+        //\bird::debug($s, var_export(Birds\App::request(), true), var_export($R, true));
+
+        \bird::output(json_encode($r), array('Content-Type'=>'application/json'));
+    }
+
+    public static function alias(&$s, $prefix=null, $suffix='.txt')
+    {
+        static $a;
+        if(is_null($a)) $a = \bird::app()->Birds['alias-dir'];
+
+        $p=strlen($s);
+        while($p>0) {
+            if($f=bird::file($a, $prefix.substr($s, 0, $p).$suffix)) {
+                break;
+            }
+            unset($f);
+            $p = strrpos(substr($s, 0, $p), '-');
+            if(!$p) break;
+        }
+        if($f) {
+            $s = substr($s, $p+1);
+            $f = trim(array_shift(file($f)));
+        }
+        return $f;
+    }
+
 }
 

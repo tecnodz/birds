@@ -73,7 +73,7 @@ class Assets
      * Outputs Bird resources (files located at Birds\App\Resources)
      * and writes the combined output at the document-root
      */
-    public static function renderResource($format=null)
+    public static function renderResource($format=null, $root=null)
     {
         $f = '/'.implode('/', \bird::urlParam());
         if(preg_match('/\.([a-z]{2,6})$/i', $f, $m)) {
@@ -83,17 +83,21 @@ class Assets
         } else {
             $ext = Route::mimeType($format);
         }
-        $root = BIRD_ROOT.'/data/web/_/'.$ext;
+        if(!$root) $root = BIRD_ROOT.'/data/web/_/'.$ext;
+        else $root.= '/'.$ext;
         $sf = array($root.$f);
         if(!file_exists($sf[0])) {
             throw new HttpException(404);
         }
         $df = \bird::app()->Birds['document-root'].\bird::scriptName(true);
         if(!is_writable($df) && !is_writable(dirname($df))) {
+            $df = 'cache://web'.\bird::scriptName(true);
+            /*
             $df = \Birds\Cache\File::cacheDir().'/web'.\bird::scriptName(true);
             if(!is_dir(dirname($df))) {
                 mkdir(dirname($df), 0777, true);
             }
+            */
         }
         unset($f);
         $lmod = filemtime($sf[0]);
