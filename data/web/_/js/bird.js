@@ -10,6 +10,7 @@ window.requestAnimFrame = (function(){
 
 (function(window) {
 
+var _got=0, _langs={};
 
 window.bird = {
     version: '1.0',
@@ -21,6 +22,42 @@ window.bird = {
     onReady: [],
     css: '',
     isReady: false,
+    get:function(q, o, i)
+    {
+        var r;
+        if(!o) { // non-contextual
+            if(typeof i ==='undefined') return document.querySelectorAll(q);
+            r=document.querySelectorAll(q);
+        } else if('length' in o) {
+            r=[];
+            for(var oi=0;oi<o.length;oi++) {
+                var ro=bird.get(q, o[oi]);
+                console.log('ro:', ro);
+                if(ro.length>0) {
+                    for(var roi=0;roi<ro.length;roi++) {
+                        r.push(ro[roi]);
+                        if(typeof i !=='undefined' && i in r) return r[i];
+                    }
+                }
+            }
+        } else if(q.search(/^[#\.]?[^\.\s\[\]\:]+$/)) {
+            if(q.substr(0,1)=='#') r=[o.getElementById(q.substr(1))];
+            else if(q.substr(0,1)=='.') r=o.getElementsByClassName(q.substr(1));
+            else r=o.getElementsByTagName(q);
+        } else {
+            var id=o.getAttribute('id');
+            if(!id) {
+                id='_n'+(_got++);
+                o.setAttribute('id', id);
+                r = document.querySelectorAll('#'+id+' '+q);
+                o.removeAttribute('id');
+            } else {
+                r = document.querySelectorAll('#'+id+' '+q);
+            }
+        }
+        if(typeof i !=='undefined') return (r.length>i)?(r[i]):(false);
+        return r;
+    },
 
     setReady:function(fn)
     {
@@ -158,6 +195,27 @@ window.bird = {
     {
         if(s) bird.language=s;
         return bird.language;
+    },
+    langw:function(ctx,before,after)
+    {
+        var h=bird.get('link[rel="alternate"][hreflang],meta[name="language"]');
+        if(h.length>1) {
+            var r={e:'span',a:{'class':'lang'},c:[]},l='';
+            for(var hi=0;hi<h.length;hi++) {
+                if(h[hi].nodeName.toLowerCase()=='meta') {
+                    l=h[hi].getAttribute('content');
+                    _langs[l]=true;
+                    r.c.push({e:'a',a:{'class':l+' selected'},c:l});
+                } else {
+                    l=h[hi].getAttribute('hreflang');
+                    _langs[l]=false;
+                    r.c.push({e:'a',a:{'class':l,'data-lang':l,href:'#'+l},c:l,t:{trigger:_setLanguage}});
+                }
+            }
+            if(ctx) return bird.element.call(((typeof ctx) == 'string')?(bird.get(ctx,null,0)):(ctx),r,before,after);
+            else return bird.element(r,before,after)
+        }
+        return false;
     },
     click: function(c)
     {
@@ -378,6 +436,21 @@ window.bird = {
 
 function charCodeFromCharacter(c) {
     return c.charCodeAt(0);
+}
+
+function _setLanguage(l)
+{
+    if(typeof l != 'string') {
+        if('stopPropagation' in l) {
+            l.stopPropagation();
+            l.preventDefault();
+        }
+        l=this.getAttribute('data-lang');
+    }
+    if(!(l in _langs)) return false;
+    bird.cookie('lang', l, null, '/');
+    window.location.reload();
+    return false;
 }
 
 /*

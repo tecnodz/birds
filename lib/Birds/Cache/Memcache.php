@@ -53,18 +53,12 @@ class Memcache
 
     public static function lastModified($key, $expires=0)
     {
-        if(!self::memcache()) return File::lastModified($key, $expires);
-        $siteKey = \Birds\Cache::siteKey();
-        if($siteKey) {
-            $key = $siteKey.'/'.$key;
-        }
-        $lmod = self::$_memcache->get($key.'.expires');
-        if ($expires) {
-            if(!$lmod || $lmod < $expires) {
-                return false;
-            }
-        }
-        return $lmod;
+        return self::get($key, $expires, 'modified');
+    }
+
+    public static function size($key, $expires=0)
+    {
+        return self::get($key, $expires, 'size');
     }
 
     /**
@@ -74,7 +68,7 @@ class Memcache
      * @param $expires int    timestamp to be compared. If timestamp is newer than cached key, false is returned.
      * @param $method  mixed  Storage method to be used. Should be either a key or a value in self::$_methods
      */
-    public static function get($key, $expires=0)
+    public static function get($key, $expires=0, $m=null)
     {
         if(!self::memcache()) return File::get($key, $expires);
 
@@ -83,13 +77,24 @@ class Memcache
             $key = $siteKey.'/'.$key;
         }
         unset($siteKey);
-        if ($expires) {
-            $kexpires = self::$_memcache->get($key.'.expires');
-            if(!$kexpires || $kexpires < $expires) {
-                unset($kexpires);
+        if ($expires || $m) {
+            $meta = self::$_memcache->get($key.'.meta');
+            if($meta) list($lmod,$size)=explode(',',$meta);
+            if($expires) {
+                if(!$meta || !$lmod || $lmod < $expires) {
+                    unset($meta, $lmod, $key, $expires, $size);
+                    return false;
+                }
+            }
+            if(!is_null($m)) {
+                if($meta) {
+                    unset($meta);
+                    if($m=='size') return $size;
+                    else if($m=='modified') return $lmod;
+                }
                 return false;
             }
-            unset($kexpires);
+            unset($meta);
         }
         return self::$_memcache->get($key);
     }
@@ -123,7 +128,7 @@ class Memcache
         //}
         $ret = true;
         foreach($keys as $key) {
-            if(!self::$_memcache->set($key.'.expires', time(), 0, $timeout) || !self::$_memcache->set($key, $value, 0, $timeout)) {
+            if(!self::$_memcache->set($k.'.meta', time().','.(@strlen($value)), 0, $timeout) || !self::$_memcache->set($key, $value, 0, $timeout)) {
                 $ret = false;
                 break;
             }

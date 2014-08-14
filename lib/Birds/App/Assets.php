@@ -157,12 +157,14 @@ class Assets
         }
 
         $gzip = false;
+        $simple = false;
         if($format=='application/javascript' || substr($format, 0, 5) == 'text/') {
             @header('Content-Type: ' . $format.';charset=utf-8');
             @header('Vary: Accept-Encoding', false);
             if (isset($_SERVER['HTTP_ACCEPT_ENCODING']) && substr_count($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip')) {
                 $gzip = true;
             }
+            $simple = true;
         } else {
             @header('Content-Type: ' . $format);
         }
@@ -171,11 +173,12 @@ class Assets
         } else {
             \Birds\bird::browserCache($lastmod, $expires);
         }
-        @header('Content-Transfer-Encoding: binary');
+        if(!$simple)
+            @header('Content-Transfer-Encoding: binary');
 
         if ($attachment) {
             $contentDisposition = 'attachment';
-            /* extensions to stream */
+            // extensions to stream
             $array_listen = array('mp3', 'm3u', 'm4a', 'mid', 'ogg', 'ra', 'ram', 'wm',
                 'wav', 'wma', 'aac', '3gp', 'avi', 'mov', 'mp4', 'mpeg', 'mpg', 'swf', 'wmv', 'divx', 'asf');
             if (in_array($extension, $array_listen))
@@ -202,7 +205,7 @@ class Assets
         }
         $size = filesize($file);
         $range='';
-        if(!isset($_SERVER['HTTP_X_REAL_IP'])) {
+        if(!$simple && !isset($_SERVER['HTTP_X_REAL_IP'])) {
             //check if http_range is sent by browser (or download manager)
             if (isset($_SERVER['HTTP_RANGE'])) {
                 list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);

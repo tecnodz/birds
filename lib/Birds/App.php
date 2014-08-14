@@ -146,11 +146,12 @@ class App
         self::$response=null;
         self::$request=null;
 
+        $req = self::request();
+
         if(isset($this->config['Birds']['language']) && $this->config['Birds']['language']) bird::$lang=$this->config['Birds']['language'];
         else if(isset($this->config['Birds']['languages'])) bird::$lang=self::language($this->config['Birds']['languages']);
         //set_error_handler(array('bird', 'log'));
 
-        $req = self::request();
         try {
             App\Route::setBase($this->config['Birds']['routes-dir']);
             $route = App\Route::find($req['script-name'], true);
@@ -388,6 +389,11 @@ class App
         } else if(count($l)<2) {
             $lang = $l[0];
         } else {
+            if(substr(self::$request['query-string'],0,1)=='!' && in_array($lang=substr(self::$request['query-string'],1), $l)) {
+                setcookie('lang',$lang,0,'/',false,false);
+                \bird::redirect(bird::scriptName(true));
+            }
+            unset($lang);
             if(!(isset($_COOKIE['lang']) && ($lang=$_COOKIE['lang']) && (in_array($lang, $l) || (strlen($lang)>2 && in_array($lang=substr($lang,0,2), $l))))) {
                 unset($lang);
             }

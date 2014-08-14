@@ -116,18 +116,7 @@ class Cache
     public static function set($key, $value, $timeout=0, $method=null, $fileFallback=false)
     {
         $cn = '\\Birds\\Cache\\'.ucfirst(self::storage($method));
-        if(is_array($key)) {
-            $ret = false;
-            foreach($key as $ckey) {
-                $ret = $cn::set($ckey, $value, $timeout);
-                if (!$ret) {
-                    break;
-                }
-                unset($ckey);
-            }
-        } else {
-            $ret = $cn::set($key, $value, $timeout);
-        }
+        $ret = $cn::set($key, $value, $timeout);
         if($fileFallback && $ret===false && $method!='file' && !$expires) {
             $ret = Cache\File::set($key, $value);
         }
@@ -138,18 +127,13 @@ class Cache
     public static function delete($key, $method=null)
     {
         $cn = '\\Birds\\Cache\\'.ucfirst(self::storage($method));
-        if(is_array($key)) {
-            $ret = false;
-            foreach($key as $ckey) {
-                $ret = $cn::delete($ckey);
-                if (!$ret) {
-                    break;
-                }
-                unset($ckey);
-            }
-            return $ret;
-        }
         return $cn::delete($key);
+    }
+
+    public static function size($key, $expires=0, $method=null)
+    {
+        $cn = '\\Birds\\Cache\\'.ucfirst(self::storage($method));
+        return $cn::size($key, $expires=0);
     }
 
     /**

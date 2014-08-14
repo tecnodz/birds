@@ -30,7 +30,7 @@
 namespace Birds\Cache;
 class Wrapper
 {
-    private $cn='\\Birds\\Cache', $key, $p, $w=false, $stat;
+    private $cn='\\Birds\\Cache', $key, $p, $w=false, $stat, $size;
     protected static $val=array();
 
     public function dir_closedir()
@@ -164,7 +164,7 @@ class Wrapper
               'uid' => 1,
               'gid' => 1,
               'rdev' => 1,
-              'size' => ($fetch)?(strlen(self::$val[$this->key])):(10000),
+              'size' => (isset(self::$val[$this->key]))?(strlen(self::$val[$this->key])):($cn::size($url)),
               'atime' => $m,
               'mtime' => $m,
               'ctime' => $m,

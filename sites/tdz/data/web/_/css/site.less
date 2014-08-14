@@ -95,13 +95,12 @@ button {width: auto; overflow: visible;}
 .clearfix:after { clear: both; }
 .clearfix { zoom: 1; }
 
-.lang{position:absolute;top:-75px;left:100%;color:#ccc;white-space:nowrap}
+.lang{position:absolute;top:-75px;left:100%;color:#ccc;white-space:nowrap;font-size:0.85em}
 .lang:before{content:'[ '}
 .lang:after{content:' ]'}
-.lang a{font-size:0.85em};
-.lang a.selected{font-weight:bold};
-.lang a:link, .lang a:visited{color:#bbb;text-decoration:none}
+.lang a,.lang a:link, .lang a:visited{color:#bbb;text-decoration:none;cursor:pointer}
 .lang a:hover,.lang a:active{color:#444;text-decoration:none}
+.lang a.selected{font-weight:bold;color:#999}
 .lang a:after{content:', ';}
 .lang a:last-child:after{content:''}
 
@@ -113,7 +112,7 @@ ciano: 00ccff
 verde: ccff00
 */
 html{background:#ffffff}
-body {font: 15px/20px 'Open Sans', sans-serif;font-weight:400;display:block;min-width:768px;max-width:1152px;margin:0 auto;min-height:480px;position:relative;}
+body {font: 15px/20px 'Open Sans', 'OpenSans', sans-serif;font-weight:400;display:block;min-width:768px;max-width:1152px;margin:0 auto;min-height:480px;position:relative;}
 h1{font-size:2em;line-height:30px;padding-top:9px;padding-bottom:12px;margin:0;font-weight:300;color:#888888;margin-top:18px;}
 h2{font-size:2em;line-height:30px;font-weight:300;color:#00ccff;margin:20px 0 10px 0}
 h3{margin:4px 0;font-size:1.1em;line-height:20px;font-weight:600;color:#888888}

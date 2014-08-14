@@ -55,7 +55,6 @@ class TextHtml
 
         $s = array_keys(\Birds\App\Layout::$vars);
         $r = array_values(\Birds\App\Layout::$vars);
-
         foreach($m as $n=>$v) {
             if($n=='header') {
                 \Birds\App::header(str_replace($s, $r, $v));
@@ -85,7 +84,19 @@ class TextHtml
             }
             unset($n, $v);
         }
-        unset($m);
+        // auto-select language
+        if(!\bird::app()->Birds['language'] && $ls=\bird::app()->Birds['languages']) {
+            foreach($ls as $l) {
+                if($l==\bird::$lang) {
+                    if(!isset($m['@language'])) 
+                        \Birds\App::$response->items[0]->content .= '<meta name="language" content="'.$l.'" />';
+                } else {
+                    \Birds\App::$response->items[0]->content .= '<link rel="alternate" hreflang="'.$l.'" href="'.\bird::fullUrl(\bird::scriptName(true)).'?!'.$l.'" />';
+                }
+                unset($l);
+            }
+        }
+        unset($m, $ls);
 
         // prepare contents
         $lc = ($route->layout)?($route->layout->content):(array());

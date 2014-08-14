@@ -2,7 +2,6 @@
 language: pt
 meta:
   title: "Tecnodesign = Design + TI"
-  "@language": pt
 content:
   body:
     - pt/home
@@ -11,7 +10,6 @@ content:
 language: en
 meta:
   title: "Tecnodesign = Design + IT"
-  "@language": en
 content:
   body:
     - en/home

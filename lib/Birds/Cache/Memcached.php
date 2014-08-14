@@ -60,14 +60,12 @@ class Memcached
 
     public static function lastModified($key, $expires=0)
     {
-        if(!self::memcached()) return File::lastModified($key, $expires);
-        $lmod = self::$_memcached->get($key.'.expires');
-        if ($expires) {
-            if(!$lmod || $lmod < $expires) {
-                return false;
-            }
-        }
-        return $lmod;
+        return self::get($key, $expires, 'modified');
+    }
+
+    public static function size($key, $expires=0)
+    {
+        return self::get($key, $expires, 'size');
     }
     
     /**
@@ -77,15 +75,30 @@ class Memcached
      * @param $expires int    timestamp to be compared. If timestamp is newer than cached key, false is returned.
      * @param $method  mixed  Storage method to be used. Should be either a key or a value in self::$_methods
      */
-    public static function get($key, $expires=0)
+    public static function get($key, $expires=0, $m=null)
     {
         if(!self::memcached()) return File::get($key, $expires);
-        if ($expires) {
-            $kexpires = self::$_memcached->get($key.'.expires');
-            if(!$kexpires || $kexpires < $expires) {
+
+        if ($expires || $m) {
+            $meta = self::$_memcached->get($key.'.meta');
+            if($meta) list($lmod,$size)=explode(',',$meta);
+            if($expires) {
+                if(!$meta || !$lmod || $lmod < $expires) {
+                    unset($meta, $lmod, $key, $expires, $size);
+                    return false;
+                }
+            }
+            if(!is_null($m)) {
+                if($meta) {
+                    unset($meta);
+                    if($m=='size') return $size;
+                    else if($m=='modified') return $lmod;
+                }
                 return false;
             }
+            unset($meta);
         }
+
         return self::$_memcached->get($key);
     }
 
@@ -109,7 +122,7 @@ class Memcached
             $ttl = $timeout;
         }
         foreach($keys as $key) {
-            if(!self::$_memcached->set($key.'.expires', time(), $timeout) || !self::$_memcached->set($key, $value, $timeout)) {
+            if(!self::$_memcached->set($k.'.meta', time().','.(@strlen($value)), $timeout) || !self::$_memcached->set($key, $value, $timeout)) {
                 return false;
             }
         }

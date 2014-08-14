@@ -36,13 +36,18 @@ class File
 
     public static function lastModified($key, $expires=0)
     {
-        $cfile = self::filename($key);
-        $lmod = @filemtime($cfile);
+        $lmod = @filemtime(self::filename($key));
         if ($lmod && (!$expires || $lmod > $expires)) {
             return $lmod;
         }
         return false;
     }
+
+    public static function size($key, $expires=0)
+    {
+        return @filesize(self::filename($key));
+    }
+
     public static function filename($key)
     {
         return self::cacheDir().'/'.$key.'.cache';

@@ -33,17 +33,12 @@ class Apc
 
     public static function lastModified($key, $expires=0)
     {
-        $siteKey = \Birds\Cache::siteKey();
-        if($siteKey) {
-            $key = $siteKey.'/'.$key;
-        }
-        $lmod = apc_fetch($key.'.expires');
-        if ($expires) {
-            if(!$lmod || $lmod < $expires) {
-                return false;
-            }
-        }
-        return $lmod;
+        return self::get($key, $expires, 'modified');
+    }
+
+    public static function size($key, $expires=0)
+    {
+        return self::get($key, $expires, 'size');
     }
 
     /**
@@ -53,21 +48,32 @@ class Apc
      * @param $expires int    timestamp to be compared. If timestamp is newer than cached key, false is returned.
      * @param $method  mixed  Storage method to be used. Should be either a key or a value in self::$_methods
      */
-    public static function get($key, $expires=0)
+    public static function get($key, $expires=0, $m=null)
     {
-        if(!function_exists('apc_store')) return File::get($key, $expires);
+        if(!function_exists('apc_store')) return File::get($key, $expires, $m);
         $siteKey = \Birds\Cache::siteKey();
         if($siteKey) {
             $key = $siteKey.'/'.$key;
         }
         unset($siteKey);
-        if ($expires) {
-            $kexpires = apc_fetch($key.'.expires');
-            if(!$kexpires || $kexpires < $expires) {
-                unset($kexpires, $key, $expires);
+        if ($expires || $m) {
+            $meta = apc_fetch($key.'.meta');
+            if($meta) list($lmod,$size)=explode(',',$meta);
+            if($expires) {
+                if(!$meta || !$lmod || $lmod < $expires) {
+                    unset($meta, $lmod, $key, $expires, $size);
+                    return false;
+                }
+            }
+            if(!is_null($m)) {
+                if($meta) {
+                    unset($meta);
+                    if($m=='size') return $size;
+                    else if($m=='modified') return $lmod;
+                }
                 return false;
             }
-            unset($kexpires);
+            unset($meta);
         }
         unset($expires);
         return apc_fetch($key);
@@ -89,27 +95,18 @@ class Apc
             $ttl = $timeout;
         }
         $siteKey = \Birds\Cache::siteKey();
-        if(!is_array($key)) {
+        if(!is_array($key)) $key = array($key);
+        foreach($key as $k) {
             if($siteKey) {
-                $key = $siteKey.'/'.$key;
+                $k = $siteKey.'/'.$k;
             }
-            if(!apc_store($key.'.expires', time(), $timeout) || !apc_store($key, $value, $timeout)) {
-                unset($ttl, $siteKey, $key);
+            if(!apc_store($k.'.meta', time().','.(@strlen($value)), $timeout) || !apc_store($k, $value, $timeout)) {
+                unset($ttl, $siteKey, $k);
                 return false;
             }
-        } else {
-            foreach($key as $k) {
-                if($siteKey) {
-                    $k = $siteKey.'/'.$k;
-                }
-                if(!apc_store($k.'.expires', time(), $timeout) || !apc_store($k, $value, $timeout)) {
-                    unset($ttl, $siteKey, $k);
-                    return false;
-                }
-                unset($k);
-            }
+            unset($k);
         }
-        unset($ttl, $siteKey);
+        unset($ttl, $siteKey, $key);
         return true;
     }
     public static function delete($key)
@@ -120,7 +117,7 @@ class Apc
         if($siteKey) {
             $key = $siteKey.'/'.$key;
         }
-        if(apc_delete($key.'.expires') && apc_delete($key)) {
+        if(apc_delete($key.'.meta') && apc_delete($key)) {
             return true;
         } else {
             return false;

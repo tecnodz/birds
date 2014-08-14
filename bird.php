@@ -265,7 +265,7 @@ class bird
                     if(isset($_SERVER['REDIRECT_STATUS']) && $_SERVER['REDIRECT_STATUS']=='200' && isset($_SERVER['REDIRECT_URL'])) {
                         self::$scriptRealName = self::safePath($_SERVER['REDIRECT_URL']);
                     } else if (isset($_SERVER['REQUEST_URI'])) {
-                        self::$scriptRealName = self::safePath($_SERVER['REDIRECT_URL']);
+                        self::$scriptRealName = self::safePath($_SERVER['REQUEST_URI']);
                     } else {
                         self::$scriptRealName = '';
                     }
