@@ -31,15 +31,15 @@ namespace Birds\Cache;
 class Memcached
 {
 
-    public static $memcachedServers=array('localhost:11211');
     private static $_memcached;
 
     public static function memcached()
     {
         if(is_null(self::$_memcached) && class_exists('Memcached')) {
-            self::$_memcached=new \Memcached(self::siteKey());
+            $skey = \Birds\Cache::siteKey();
+            self::$_memcached=new \Memcached($skey);
             $conn=false;
-            foreach(self::$memcachedServers as $s) {
+            foreach(\Birds\Cache::$memcachedServers as $s) {
                 if(preg_match('/^(.*)\:([0-9]+)$/', $s, $m)) {
                     if(self::$_memcached->addServer($m[1], (int)$m[2])) $conn=true;
                 } else if(self::$_memcached->addServer($s, 11211)) $conn=true;
@@ -47,10 +47,10 @@ class Memcached
             }
             if(!$conn) self::$_memcached=false;
             else {
-                if($key=self::siteKey()) {
-                    self::$_memcached->setOption(\Memcached::OPT_PREFIX_KEY, $key.'/');
+                if($skey) {
+                    self::$_memcached->setOption(\Memcached::OPT_PREFIX_KEY, $skey.'/');
                 }
-                unset($key);
+                unset($skey);
             }
             unset($conn);
 
@@ -122,7 +122,7 @@ class Memcached
             $ttl = $timeout;
         }
         foreach($keys as $key) {
-            if(!self::$_memcached->set($k.'.meta', time().','.(@strlen($value)), $timeout) || !self::$_memcached->set($key, $value, $timeout)) {
+            if(!self::$_memcached->set($key.'.meta', time().','.(@strlen($value)), $timeout) || !self::$_memcached->set($key, $value, $timeout)) {
                 return false;
             }
         }

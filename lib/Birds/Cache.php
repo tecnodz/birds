@@ -30,7 +30,7 @@
 namespace Birds;
 class Cache
 {
-    public static $timeout = 0;
+    public static $timeout = 0, $memcachedServers=array('localhost:11211');
     private static $_storage=null;
     /**
      * Cache key used for storing this site information in memory, must be a 
@@ -64,8 +64,8 @@ class Cache
             if(in_array($method, array('file', 'apc', 'memcache', 'memcached'))) return $method;
         }
         if(is_null(self::$_storage)) {
-            if(ini_get('memcached.serializer')) self::$_storage='memcached';
-            else if(function_exists('memcache_debug')) self::$_storage='memcache';
+            if(ini_get('memcached.serializer') && Cache\Memcached::memcached()) self::$_storage='memcached';
+            else if(function_exists('memcache_debug') && Cache\Memcache::memcache()) self::$_storage='memcache';
             else if(function_exists('apc_fetch')) self::$_storage='apc';
             else self::$_storage='file';
         }

@@ -31,7 +31,6 @@ namespace Birds\Cache;
 class Memcache
 {
 
-    public static $memcachedServers=array('localhost:11211');
     private static $_memcache;
 
     public static function memcache()
@@ -39,7 +38,7 @@ class Memcache
         if(is_null(self::$_memcache) && function_exists('memcache_debug')) {
             self::$_memcache=new \Memcache();
             $conn=false;
-            foreach(self::$memcachedServers as $s) {
+            foreach(\Birds\Cache::$memcachedServers as $s) {
                 if(preg_match('/^(.*)\:([0-9]+)$/', $s, $m)) {
                     if(self::$_memcache->connect($m[1], (int)$m[2])) $conn=true;
                 } else if(self::$_memcache->connect($s, 11211)) $conn=true;
@@ -72,7 +71,7 @@ class Memcache
     {
         if(!self::memcache()) return File::get($key, $expires);
 
-        $siteKey = self::siteKey();
+        $siteKey = \Birds\Cache::siteKey();
         if($siteKey) {
             $key = $siteKey.'/'.$key;
         }
