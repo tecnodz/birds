@@ -98,7 +98,7 @@ class App
     public function start()
     {
         if(isset($this->config['Birds']['lib-dir'])) {
-            $sep = (isset($_SERVER['WINDIR']))?(';'):(':');
+            $sep = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')?(';'):(':');
             if(!is_array($this->config['Birds']['lib-dir'])) {
                 $this->config['Birds']['lib-dir'] = explode($sep, $this->config['Birds']['lib-dir']);
             }

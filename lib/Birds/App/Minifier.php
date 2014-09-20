@@ -187,7 +187,7 @@ class Minifier
             unset($lc);
         }
         $combine = true;
-        $tmpd = (strpos($fn, ':/'))?('/dev/null'):(dirname($fn));
+        $tmpd = (strpos($fn, ':/'))?(sys_get_temp_dir()):(dirname($fn));
         if($compress){
             // try yui compressor
             $tmp = tempnam($tmpd, '.'.basename($fn));
@@ -224,8 +224,19 @@ class Minifier
                 }
                 unset($fname, $i);
             }
-            if(rename($tmp, $fn)) {
-                chmod($fn, 0666);
+
+            if(strpos($fn, ':/')) {
+                if(file_put_contents($fn, file_get_contents($tmp))) {
+                    @unlink($tmp);
+                } else {
+                    return false;
+                }
+            } else {
+                if(rename($tmp,$fn)) {
+                    chmod($fn, 0666);
+                } else {
+                    @unlink($tmp);
+                }
             }
         }
         return true;
