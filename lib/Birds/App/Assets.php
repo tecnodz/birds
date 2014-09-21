@@ -38,29 +38,7 @@ class Assets
     public static function render($format=null)
     {
         $url = \Birds\bird::scriptName(true);
-        $cd  = \Birds\bird::app()->Birds['routes-dir'];
-        if(is_array($cd)) {
-            array_unshift($cd, \Birds\bird::app()->Birds['document-root']);
-        } else {
-            $cd = array(\Birds\bird::app()->Birds['document-root'], $cd);
-        }
-        $f = \bird::file($cd, $url);
-        //\bird::debug($url, var_export(\Birds\Cache\Wrapper::stat('cache:/web'.$url), true));
-        if(!$f && !file_exists($f='cache://web'.$url)) $f = false;
-        unset($url, $cd);
-        if($f) {
-            // todo: search for urlparameters in file name, like used for optimizing images
-            if(is_dir($f)) {
-                if(!file_exists($f=$f.'/index.'.Route::mimeType($format))) {
-                    $f=false;
-                }
-            } else {
-                if($p=strrpos($f, '.')) {
-                    $format = Route::mimeType(substr($f, $p+1));
-                }
-            }
-            // optimize
-            // add headers
+        if($f = static::find($url, $format)) {
             self::download($f, $format, null, 0, false, false, false);
             \Birds\App::end();
         } else {
@@ -126,6 +104,37 @@ class Assets
         }
         Assets::download($df, $format, null, 0, false, false, true);
         \Birds\App::end();
+    }
+
+    public static function find($url, &$format=null)
+    {
+        $cd  = \Birds\bird::app()->Birds['routes-dir'];
+        if(!is_array($cd)) $cd = array($cd);
+        array_unshift($cd, \Birds\bird::app()->Birds['document-root']);
+        $f = \bird::file($cd, $url);
+        if(!$f && !file_exists($f='cache://web'.$url)) $f = false;
+        unset($cd);
+        if($f) {
+            if(is_dir($f)) {
+                if(substr($f,-1)!='/') {
+                    $r = true;
+                    $f .= '/';
+                } else {
+                    $r = false;
+                }
+                if(!file_exists($f=$f.'index.'.Route::mimeType($format))) {
+                    $f=false;
+                } else if($r) {
+                    \bird::redirect($url.'/');
+                }
+                unset($r);
+            } else {
+                if($p=strrpos($f, '.')) {
+                    $format = Route::mimeType(substr($f, $p+1));
+                }
+            }
+        }
+        return $f;
     }
 
     /**
@@ -203,7 +212,7 @@ class Assets
             @header('Content-Encoding: ' . $gze);
             $file = $gzf;
         }
-        $size = filesize($file);
+        $size = @filesize($file);
         $range='';
         if(!$simple && !isset($_SERVER['HTTP_X_REAL_IP'])) {
             //check if http_range is sent by browser (or download manager)

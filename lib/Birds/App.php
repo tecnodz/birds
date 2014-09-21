@@ -119,7 +119,7 @@ class App
         if(isset($this->config['Birds']['export'])) {
             foreach($this->config['Birds']['export'] as $cn=>$toExport) {
                 if(!class_exists($cn)) {
-                    $cn = 'Birds\\'.ucfirst(tdz::camelize($cn));
+                    $cn = 'Birds\\'.bird::camelize($cn, true);
                     if(!class_exists($cn)) {
                         return false;
                     }

@@ -35,11 +35,10 @@ class Form extends Node
     public function __construct($d, $o=null, $F=null)
     {
         if(is_null($F)) $F=$this;
-        $cn = get_called_class();
         if(!is_array($d)) {
-            $d = $cn::$base;
+            $d = static::$base;
         } else {
-            $d += $cn::$base;
+            $d += static::$base;
         }
         foreach($d as $k=>$v) {
             if(is_int($k)) {
@@ -53,7 +52,6 @@ class Form extends Node
             }
             unset($k, $v, $m);
         }
-        unset($cn);
         if($o) {
             $this->setValue($o, $F);
         }

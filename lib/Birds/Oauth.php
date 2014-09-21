@@ -69,11 +69,10 @@ class Oauth {
     public function graph()
     {
         if(!isset(bird::$session[$this->prefix])) {
-            $cn = get_called_class();
             $g = $this->makeRequest($this->graphUrl);
-            if($g &&  is_array($cn::$sessionMap)) {
+            if($g &&  is_array(static::$sessionMap)) {
                 $s = array();
-                foreach($cn::$sessionMap as $k=>$v) {
+                foreach(static::$sessionMap as $k=>$v) {
                     if(is_array($v)) {
                         foreach($v as $vk) {
                             if(isset($g[$vk]) && $g[$vk]) {
@@ -102,7 +101,7 @@ class Oauth {
             } else {
                 bird::$session[$this->prefix] = $g;
             }
-            unset($g, $cn);
+            unset($g);
         }
         if(!isset(bird::$session['oauth/'.$this->prefix])) {
             bird::$session['oauth/'.$this->prefix] = bird::$session[$this->prefix]['id'];
@@ -111,7 +110,7 @@ class Oauth {
         return bird::$session[$this->prefix];
     }
     
-    protected function requestAccessToken($method = 'GET', Array $params = array(), $returnType = 'flat', Array $values = array('access_token', 'expires')){
+    protected function requestAccessToken($method = 'GET', Array $params=array(), $returnType = 'flat', Array $values = array('access_token', 'expires')){
         // add oauth verifier to parameters for oauth 1.0 request
         if(isset($this->requestTokenUrl) && strlen($this->requestTokenUrl) > 0 && isset($_GET['oauth_verifier'])){
             $parameters = array('oauth_verifier' => $_GET['oauth_verifier']);

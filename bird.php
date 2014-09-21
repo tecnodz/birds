@@ -383,7 +383,8 @@ class bird
         $cacheControl = self::cacheControl(null, $expires);
 
         $if_modified_since = (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']))?(strtotime(stripslashes($_SERVER['HTTP_IF_MODIFIED_SINCE']))):(false);
-        if (!$if_modified_since || $if_modified_since == $lastModified) {
+
+        if (!$if_modified_since || $if_modified_since != $lastModified) {
             return;
         }
         /**
@@ -874,6 +875,7 @@ class bird
         if(!is_array($a1)) $a1=array($a1);
         if(!is_array($a2)) $a2=array($a2);
         foreach($a2 as $e) {
+            if($e[0]=='/') $e = substr($e,1);
             foreach($a1 as $d) {
                 if(substr($d, -1)!='/') $d .= '/';
                 if(self::file(($f=$d.$e), null, $mode)) {
@@ -907,12 +909,14 @@ class bird
     {
         if ($file=='') {
             return false;
+        } else if(substr($file, 0, 7)==='cache:/') {
+            return Cache::set(substr($file, 7), $contents);
         }
         if($lmod && file_exists($file) && $lmod <= filemtime($file)) {
             return false;
         }
         $dir = dirname($file);
-        if (!is_dir($dir)) {
+        if (!is_writable($dir) && !is_dir($dir)) {
             if ($recursive) {
                 $u=umask(0);
                 mkdir($dir, $mask+0111, true);

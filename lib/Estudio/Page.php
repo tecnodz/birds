@@ -20,10 +20,9 @@ class Page extends \Birds\Model
 
     public static function match($url, $exception=true)
     {
-        $cn = get_called_class();
         if($url[0]!='/') $url = '/'.$url;
         $f=array('where'=>array('url'=>$url,'published<'=>date('Y-m-d\TH:i:s')));
-        $P = $cn::find($f);
+        $P = static::find($f);
         if($i=$P->count()) {
             return $P->fetch(0);
         } else {
@@ -33,7 +32,7 @@ class Page extends \Birds\Model
                 $url = substr($url, 0, strrpos($url, '/'));
                 if(!$url) $url='/';
                 $f['where']['url']=$url;
-                $P = $cn::find($f);
+                $P = static::find($f);
                 if($P->count()) break;
                 unset($P);
             }

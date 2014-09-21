@@ -41,8 +41,7 @@ class Wrapper
     {\bird::debug(__METHOD__.', '.__LINE__);}
     public function dir_rewinddir ()
     {\bird::debug(__METHOD__.', '.__LINE__);}
-    public function mkdir ( string $path , int $mode , int $options )
-    {\bird::debug(__METHOD__.', '.__LINE__);}
+    public function mkdir($path, $mode , $options){ return true; }
     public function rename ( string $path_from , string $path_to )
     {\bird::debug(__METHOD__.', '.__LINE__);}
     public function rmdir ( string $path , int $options )
@@ -63,6 +62,11 @@ class Wrapper
 
     public function stream_read($l)
     {
+        if(!isset(self::$val[$this->key])) {
+            $url = $this->key;
+            $cn = $this->cn;
+            self::$val[$this->key] = $cn::get($url, \Birds\Cache::$timeout);
+        }
         $r = substr(self::$val[$this->key], $this->p, $l);
         $this->p += strlen($r);
         return $r;
@@ -99,6 +103,7 @@ class Wrapper
 
     public function stream_seek($o, $w)
     {
+        if(!$this->url_stat($this->key, null, true)) return false;
         switch ($w) {
             case SEEK_SET:
                 if ($o < strlen(self::$val[$this->key]) && $o >= 0) {
@@ -146,7 +151,7 @@ class Wrapper
      */
     public function url_stat ($url, $flags=null, $fetch=false)
     {
-        if(is_null($this->stat) || ($this->key!=$url && 'cache:/'.$this->key!=$url)) {
+        if(is_null($this->stat) || ($this->key!=$url && 'cache:/'.$this->key!=$url) || $fetch && !isset(self::$val[$this->key])) {
             $url = $this->url($url);
             $cn = $this->cn;
             $m = $cn::lastModified($url, \Birds\Cache::$timeout);
@@ -155,7 +160,9 @@ class Wrapper
             } else {
                 $m = (int) $m;
             }
-            if($fetch) self::$val[$this->key] = $cn::get($url, \Birds\Cache::$timeout);
+            if($fetch) {
+                self::$val[$this->key] = $cn::get($url, \Birds\Cache::$timeout);
+            }
             $this->stat = array(
               'dev' => 1,
               'ino' => 1,
@@ -199,5 +206,7 @@ class Wrapper
         if($r) $w->stream_close();
         return $r;
     }
+
+
 }
 

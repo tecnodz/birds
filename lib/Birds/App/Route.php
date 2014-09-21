@@ -188,7 +188,6 @@ class Route
 	public static function find($route, $updateScriptName=false, $checkParent=true)
 	{
         if(is_null(self::$base)) return false;
-        $cn = get_called_class();
 
         // transform any non-slug characters (except /_.) into lower-case ascii
         if(substr($route,0,1)!='/') $route = '/'.$route;
@@ -207,14 +206,14 @@ class Route
         $pi = pathinfo($route);
         if(substr($pi['dirname'],0,1)=='.') $pi['dirname'] = substr($pi['dirname'],1);
         $dir = $pi['dirname'].(($pi['filename'])?('/'.$pi['filename']):(''));
-        $ext = (isset($pi['extension']))?(self::mimeType($pi['extension'])):('');
+        $ext = (isset($pi['extension']))?(static::mimeType($pi['extension'])):('');
         unset($pi);
 
         // search for the route configuration file
         foreach(self::$base as $b) {
-            $r = self::validateRoute($route, $b.$dir.'.yml', $ext);
+            $r = static::validateRoute($route, $b.$dir.'.yml', $ext);
             if($r) {
-                self::$current = $route;
+                static::$current = $route;
                 break;
             }
             unset($b, $r);
@@ -224,9 +223,9 @@ class Route
             while(isset($pd[0])) {
                 array_pop($pd);
                 foreach(self::$base as $b) {
-                    $r = self::validateRoute($route, $b.'/'.implode('/',$pd).'.yml', $ext, true);
+                    $r = static::validateRoute($route, $b.'/'.implode('/',$pd).'.yml', $ext, true);
                     if($r && $r->multiviews) {
-                        self::$current = '/'.implode('/',$pd);
+                        static::$current = '/'.implode('/',$pd);
                         unset($pd);
                         break;
                     }
@@ -236,7 +235,7 @@ class Route
             unset($pd);
         }
         if(isset($r)) {
-            if($updateScriptName) \Birds\bird::scriptName(self::$current);
+            if($updateScriptName) \Birds\bird::scriptName(static::$current);
             if($id) {
                 return $r->getContent($id);
             }

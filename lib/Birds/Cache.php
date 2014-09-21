@@ -30,7 +30,17 @@
 namespace Birds;
 class Cache
 {
-    public static $timeout = 0, $memcachedServers=array('localhost:11211');
+    /**
+     * In order to update these default values, try setting as the Birds/export settings:
+     *   ---
+     *   all:
+     *     Birds:
+     *       export:
+     *         Birds\\Cache:
+     *           timeout: 0
+     *           memcachedServers: [ "localhost:11211" ] 
+     */    
+    public static $timeout = 0, $memcachedServers=array();
     private static $_storage=null;
     /**
      * Cache key used for storing this site information in memory, must be a 
@@ -117,7 +127,7 @@ class Cache
     {
         $cn = '\\Birds\\Cache\\'.ucfirst(self::storage($method));
         $ret = $cn::set($key, $value, $timeout);
-        if($fileFallback && $ret===false && $method!='file' && !$expires) {
+        if($fileFallback && $ret===false && $method!='file' && !$timeout) {
             $ret = Cache\File::set($key, $value);
         }
         unset($cn,$key,$value,$timeout,$method);

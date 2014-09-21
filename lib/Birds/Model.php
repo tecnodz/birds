@@ -35,13 +35,12 @@ class Model extends Data
 
     public static function catalog($format='text/html', $scope=null)
     {
-        $cn = get_called_class();
-        $o = Schema::load($cn, false, 'active-data');
+        $o = Schema::load(get_called_class(), false, 'active-data');
 
         if(!$o) $o = array();
         if(!is_null($scope)) $o['scope'] = $scope;
-        \bird::debug(var_export($cn::find($o), true));
-        return implode('', $cn::find($o)->fetch());
+        \bird::debug(var_export(static::find($o), true));
+        return implode('', static::find($o)->fetch());
     }
 
     public function render($format='text/html', $scope=null)
@@ -226,9 +225,8 @@ class Model extends Data
 
     public function asArray($scope='')
     {
-        $cn = get_called_class();
         $r = array();
-        $fs = $cn::scope($scope);
+        $fs = static::scope($scope);
         if(!$fs) return $r;
         foreach($fs as $i=>$c) {
             if(is_int($i)) $i=$c;
@@ -319,14 +317,13 @@ class Model extends Data
     /*
     public static function find($where=null, $limit=1, $scope=null, $collection=true, $orderBy=null, $groupBy=null)
     {
-        $cn = get_called_class();
         $o = array();
         if($where) $o['where']=$where;
         if($limit) $o['limit']=$limit;
         // scope
         if($orderBy) $o['orderBy']=$orderBy;
         if($groupBy) $o['groupBy']=$groupBy;
-        $q = Data::connect()->find($cn::$schemaid, $o);
+        $q = Data::connect()->find(static::$schemaid, $o);
         unset($o);
         if($q->count()==0) return false;
         else if($limit==1) return array_shift($q->fetch());

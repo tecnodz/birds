@@ -167,27 +167,31 @@ class Minifier
         if(!is_array($fs)) {
             $fs = array($fs);
         }
+        $tmpd = (strpos($fn, ':/'))?(sys_get_temp_dir()):(dirname($fn));
         if($type=='css') {
             foreach($fs as $i=>$cf) {
                 if(substr($cf, -5)=='.less') {
-                    if(!isset($lc)) {
-                        ini_set('memory_limit', '8M');
-                        if(!class_exists('lessc')) require_once BIRD_ROOT.'/lib/lessphp/lessc.inc.php';
-                        $lc = new \lessc();
-                        $lc->setVariables(array('assets-url'=>'"'.self::$assetsUrl.'"'));
-                        //$lc->setImportDir(array(dirname($root.$less).'/'),$root);
-                        $lc->registerFunction('dechex', 'less_dechex');
+                    if(!file_exists($cfc=\Birds\Cache\File::filename('less'.$cf)) || filemtime($cfc)<filemtime($cf)) {
+                        if(!is_dir(dirname($cfc))) mkdir(dirname($cfc), 0777, true);
+                        if(!isset($lc)) {
+                            ini_set('memory_limit', '8M');
+                            if(!class_exists('lessc')) require_once BIRD_ROOT.'/lib/lessphp/lessc.inc.php';
+                            $lc = new \lessc();
+                            $lc->setVariables(array('assets-url'=>'"'.self::$assetsUrl.'"'));
+                            //$lc->setImportDir(array(dirname($root.$less).'/'),$root);
+                            $lc->registerFunction('dechex', 'less_dechex');
+                        }
+                        $lc->checkedCompile($cf, $cfc);
+                        if(!file_exists($cfc)) continue;
                     }
-                    $lc->checkedCompile($cf, $cf.'.css');
-                    if(file_exists($cf.'.css')) {
-                        $fs[$i].='.css';
-                    }
+                    $fs[$i] = $cfc;
+                    unset($cfc);
                 }
+                unset($cf, $i);
             }
             unset($lc);
         }
         $combine = true;
-        $tmpd = (strpos($fn, ':/'))?(sys_get_temp_dir()):(dirname($fn));
         if($compress){
             // try yui compressor
             $tmp = tempnam($tmpd, '.'.basename($fn));
@@ -211,6 +215,7 @@ class Minifier
                     }
                 }
             }
+            unset($tmp, $cmd, $output, $ret);
         }
         if($combine){
             // atomic writes
@@ -238,9 +243,10 @@ class Minifier
                     @unlink($tmp);
                 }
             }
+            unset($tmp);
         }
+        unset($tmpd, $fn);
         return true;
-
     }
 }
 

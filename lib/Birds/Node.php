@@ -147,8 +147,7 @@ class Node
         if(is_null($this->attributes)) {
             $this->attributes=array();
         }
-        $cn = get_called_class();
-        foreach(explode(' ', trim($cn::ATTRIBUTES)) as $n) {
+        foreach(explode(' ', trim(static::ATTRIBUTES)) as $n) {
             if(!isset($this->attributes[$n])) {
                 if(method_exists($this, $m='get'.ucfirst($n))) {
                     $this->attributes[$n] = $this->$m();

@@ -38,19 +38,18 @@ class Sql
 
     public static function connect($n='', $exception=true, $tries=3)
     {
-        $cn = get_called_class();
-        if(!isset($cn::$conn[$n]) || !$cn::$conn[$n]) {
+        if(!isset(static::$conn[$n]) || !static::$conn[$n]) {
             try {
                 $db = \bird::app()->Data[$n]
-                    + array('username'=>null, 'password'=>null, 'options'=>$cn::$options);
+                    + array('username'=>null, 'password'=>null, 'options'=>static::$options);
 
-                $cn::$conn[$n] = new \PDO($db['dsn'], $db['username'], $db['password'], $db['options']);
-                if(!$cn::$conn[$n]) {
+                static::$conn[$n] = new \PDO($db['dsn'], $db['username'], $db['password'], $db['options']);
+                if(!static::$conn[$n]) {
                     $tries--;
-                    return $cn::connect($n, $exception, $tries);
+                    return static::connect($n, $exception, $tries);
                 }
                 if(isset($db['options'][\PDO::MYSQL_ATTR_INIT_COMMAND])) {
-                    $cn::$conn[$n]->exec($db['options'][\PDO::MYSQL_ATTR_INIT_COMMAND]);
+                    static::$conn[$n]->exec($db['options'][\PDO::MYSQL_ATTR_INIT_COMMAND]);
                 }
             } catch(Exception $e) {
                 \bird::log('Could not connect to '.$n.":\n  {$e->getMessage()}");
@@ -59,7 +58,7 @@ class Sql
                 }
             }
         }
-        return $cn::$conn[$n];
+        return static::$conn[$n];
     }
 
     public function schema($prop=null)
@@ -71,7 +70,7 @@ class Sql
     public function getSchema($tn, $schema=array())
     {
         $cn = 'Birds\\Data\\'.ucfirst($this->engine).'Schema';
-        return $cn::load($this, $tn, $schema);
+        return static::load($this, $tn, $schema);
     }
     */
 
