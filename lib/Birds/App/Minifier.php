@@ -192,6 +192,7 @@ class Minifier
             unset($lc);
         }
         $combine = true;
+        if($compress && !file_exists(self::$paths['cat']) || !file_exists(self::$paths['java'])) $compress = false;
         if($compress){
             // try yui compressor
             $tmp = tempnam($tmpd, '.'.basename($fn));

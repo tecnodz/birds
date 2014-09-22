@@ -199,6 +199,8 @@ class Assets
                 @header("Content-Disposition: $contentDisposition;filename=\"$fname\"");
             }
         }
+        $size = @filesize($file);
+        // we should fix Content-Length with gzip encoding 
         if ($gzip) {
             //$gzf=BIRD_VAR . '/cache/download/' . md5_file($file);
             $gzf = (substr($file, 0, 7)=='cache:/')?($file.'.gz'):('cache://gzip/'.md5($file));
@@ -211,39 +213,40 @@ class Assets
                 $gze = 'x-gzip';
             @header('Content-Encoding: ' . $gze);
             $file = $gzf;
-        }
-        $size = @filesize($file);
-        $range='';
-        if(!$simple && !isset($_SERVER['HTTP_X_REAL_IP'])) {
-            //check if http_range is sent by browser (or download manager)
-            if (isset($_SERVER['HTTP_RANGE'])) {
-                list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
-                if ($size_unit == 'bytes') {
-                    //multiple ranges could be specified at the same time, but for simplicity only serve the first range
-                    //http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
-                    $range = preg_replace('/\,*$/', '', $range_orig);
-                    //list($range, $extra_ranges) = explode(',', $range_orig, 2);
+            $seek_end = filesize($gzf) -1;
+            $seek_start = 0;
+        } else {
+            $range='';
+            if(!$simple && !isset($_SERVER['HTTP_X_REAL_IP'])) {
+                //check if http_range is sent by browser (or download manager)
+                if (isset($_SERVER['HTTP_RANGE'])) {
+                    list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+                    if ($size_unit == 'bytes') {
+                        //multiple ranges could be specified at the same time, but for simplicity only serve the first range
+                        //http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
+                        $range = preg_replace('/\,*$/', '', $range_orig);
+                        //list($range, $extra_ranges) = explode(',', $range_orig, 2);
+                    }
                 }
+                @header('Accept-Ranges: bytes');
             }
-            @header('Accept-Ranges: bytes');
+
+            //figure out download piece from range (if set)
+            if ($range)
+                list($seek_start, $seek_end) = explode('-', $range, 2);
+
+            //set start and end based on range (if set), else set defaults
+            //also check for invalid ranges.
+            $seek_end = (empty($seek_end)) ? ($size - 1) : min(abs(intval($seek_end)), ($size - 1));
+            $seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)), 0);
+
+            //Only send partial content header if downloading a piece of the file (IE workaround)
+            if ($seek_start > 0 || $seek_end < ($size - 1)) {
+                header('HTTP/1.1 206 Partial Content');
+                header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $size);
+            }
+            @header('Content-Length: ' . ($seek_end - $seek_start + 1));
         }
-
-        //figure out download piece from range (if set)
-        if ($range)
-            list($seek_start, $seek_end) = explode('-', $range, 2);
-
-        //set start and end based on range (if set), else set defaults
-        //also check for invalid ranges.
-        $seek_end = (empty($seek_end)) ? ($size - 1) : min(abs(intval($seek_end)), ($size - 1));
-        $seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)), 0);
-
-        //Only send partial content header if downloading a piece of the file (IE workaround)
-        if ($seek_start > 0 || $seek_end < ($size - 1)) {
-            header('HTTP/1.1 206 Partial Content');
-            header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $size);
-        }
-        @header('Content-Length: ' . ($seek_end - $seek_start + 1));
-
         //open the file
         $fp = fopen($file, 'rb');
         //seek to start of missing part
