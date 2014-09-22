@@ -74,10 +74,11 @@ class Webapp extends Assets
                     $s0 .= $m[0];
                 }
                 foreach(glob(dirname($f).'/_/*.{css,less,js}',  GLOB_BRACE) as $a) {
-                    if(substr($a, -3)=='.js') $s1 .= '<script async src="_/'.basename($a).'"></script>';
+                    $time = date('YmdHis', filemtime($a));
+                    if(substr($a, -3)=='.js') $s1 .= '<script async src="_/'.basename($a).'?'.$time.'"></script>';
                     else {
-                        if(substr($a, -5)=='.less') $s0 .= '<link rel="stylesheet" href="_/'.basename($a, '.less').'.css" />';
-                        else $s0 .= '<link rel="stylesheet" href="_/'.basename($a).'" />';
+                        if(substr($a, -5)=='.less') $s0 .= '<link rel="stylesheet" href="_/'.basename($a, '.less').'.css?'.$time.'" />';
+                        else $s0 .= '<link rel="stylesheet" href="_/'.basename($a).'?'.$time.'" />';
                     }
                 }
                 $s0 .= '</head>';
