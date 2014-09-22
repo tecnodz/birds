@@ -171,7 +171,7 @@ class Minifier
         if($type=='css') {
             foreach($fs as $i=>$cf) {
                 if(substr($cf, -5)=='.less') {
-                    if(!file_exists($cfc=\Birds\Cache\File::filename('less'.$cf)) || filemtime($cfc)<filemtime($cf)) {
+                    if(!file_exists($cfc=\Birds\Cache\File::filename('less'.md5($cf))) || filemtime($cfc)<filemtime($cf)) {
                         if(!is_dir(dirname($cfc))) mkdir(dirname($cfc), 0777, true);
                         if(!isset($lc)) {
                             ini_set('memory_limit', '8M');

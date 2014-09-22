@@ -284,7 +284,7 @@ class bird
         return self::$scriptName;
     }
 
-    public function safePath($s)
+    public static function safePath($s)
     {
         if($q=strpos($s, '?')) {
             $s = substr($s, 0, $q);
