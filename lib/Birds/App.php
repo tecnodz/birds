@@ -30,9 +30,9 @@
 namespace Birds;
 class App
 {
-    public static $onStart=array(),$onEnd=array(), $response;
+    public static $onStart=array(),$onEnd=array(), $response, $running=false;
     protected $config;
-    protected static $request, $instance, $running=false;
+    protected static $request, $instance;
 
 	public function __construct()
 	{
@@ -206,6 +206,7 @@ class App
         if(self::$running && $exception) {
             throw new App\HttpException(200);
         }
+        self::$running = false;
     }
 
     /**

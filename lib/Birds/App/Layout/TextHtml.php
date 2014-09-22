@@ -129,6 +129,7 @@ class TextHtml
 
             foreach($co[$slot] as $i=>&$c) {
                 $c = \Birds\App\Content::create($c, $format);
+                if(!\Birds\App::$running) break;
                 $n->addItem(array('node'=>false, 'content'=>$c));
                 unset($i, $c, $cid);
             }
@@ -138,7 +139,8 @@ class TextHtml
 
         \Birds\App\Route::$active=null;
         unset($route);
-        \Birds\App::output(''.\Birds\App::$response);
+        if(\Birds\App::$running)
+            \Birds\App::output(''.\Birds\App::$response);
     }
 }
 
